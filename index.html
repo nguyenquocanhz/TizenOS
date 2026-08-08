@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TizenOS (Debian Edition) — Hệ điều hành Desktop Thế hệ mới</title>
+    <meta name="description" content="TizenOS kết hợp sự ổn định tuyệt đối của Debian 12 với Bảo mật 7 tầng và Khung ứng dụng di động siêu nhẹ của Tizen OS.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header>
+        <div class="nav-container">
+            <a href="index.html" class="logo-brand">
+                <span>TizenOS</span>
+                <span class="logo-badge">Debian v1.0</span>
+            </a>
+            <nav>
+                <ul>
+                    <li><a href="index.html" class="active">Trang chủ</a></li>
+                    <li><a href="#features">Tính năng</a></li>
+                    <li><a href="#architecture">Kiến trúc</a></li>
+                    <li><a href="https://github.com/nguyenquocanhz/TizenOS" target="_blank">GitHub</a></li>
+                </ul>
+            </nav>
+            <a href="download.html" class="btn-nav-download">Tải về ISO ⚡</a>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-pill">🚀 Debian 12 Bookworm + Tizen Framework Core</div>
+        <h1>Sự Hòa Quyện Giữa <span>Debian 12</span> & <span>Tizen OS</span></h1>
+        <p class="hero-subtitle">
+            Hệ điều hành Desktop tự hào sở hữu Bảo mật 7 Tầng cấp Kernel (Smack MAC & Cynara), 
+            Tiến trình nạp ứng dụng tức thì (Launchpad Pre-fork), Trình quản lý gói Kép (TPK & APT), 
+            và Giao diện Kính mờ Glassmorphism đỉnh cao.
+        </p>
+        <div class="hero-actions">
+            <a href="download.html" class="btn-primary">Tải về TizenOS 1.0 Live ISO</a>
+            <a href="https://github.com/nguyenquocanhz/TizenOS" target="_blank" class="btn-secondary">Mã nguồn GitHub 🐙</a>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features-grid">
+        <div class="card-glass">
+            <div class="card-icon">🔒</div>
+            <h3>Bảo mật 7 Lớp Cấp Kernel</h3>
+            <p>Tích hợp kiểm soát truy cập bắt buộc Kernel Smack MAC, Cynara Policy Engine, PAM, Polkit, AES-256 Keyring và D-Bus Auth Consent Prompt.</p>
+        </div>
+        <div class="card-glass">
+            <div class="card-icon">⚡</div>
+            <h3>Khởi chạy App Tức thì</h3>
+            <p>Tiến trình Pre-fork Process Pool Launchpad đúc sẵn tài nguyên bộ nhớ C/GLib, giúp ứng dụng mở ngay lập tức không độ trễ.</p>
+        </div>
+        <div class="card-glass">
+            <div class="card-icon">📦</div>
+            <h3>Trình Quản lý Gói Kép</h3>
+            <p>Đóng gói chuẩn TPK Native (`.tpk`) kết hợp APT Bridge tương thích 100% với 60,000+ gói phần mềm `.deb` của kho Debian 12.</p>
+        </div>
+        <div class="card-glass">
+            <div class="card-icon">🖥️</div>
+            <h3>Giao diện Wayland & X11 Fallback</h3>
+            <p>Wayland Compositor native dựa trên `wlroots` với XWayland HW accel, tự động fallback sang Standalone X11 Session C cho GPU NVIDIA legacy.</p>
+        </div>
+        <div class="card-glass">
+            <div class="card-icon">💿</div>
+            <h3>Bộ Cài đặt GTK4 7-Step Wizard</h3>
+            <p>Trình cài đặt `tizenos-installer` đồ họa hỗ trợ phân vùng ext4/LUKS mã hóa, cấu hình tài khoản, rsync -aHAX bảo toàn Smack xattr.</p>
+        </div>
+        <div class="card-glass">
+            <div class="card-icon">🔑</div>
+            <h3>Công cụ Ký số `signFile`</h3>
+            <p>Bộ công cụ ký số và kiểm định tính toàn vẹn 3 cấp độ: Ed25519 (EdDSA), RSA-4096 PSS, ECDSA P-256, GPG signatures và SHA256/512 checksums.</p>
+        </div>
+    </section>
+
+    <!-- Comparison Table -->
+    <section id="architecture" class="comparison-section">
+        <h2 class="section-title">So sánh Sự Khác biệt Đột phá</h2>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tiêu chí So sánh</th>
+                        <th>Ubuntu / Fedora</th>
+                        <th>Tizen TV (Gốc)</th>
+                        <th class="highlight-col">TizenOS (Debian Edition)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Nền tảng Lõi</strong></td>
+                        <td>Ubuntu/Fedora Base</td>
+                        <td>Tizen Base (TV)</td>
+                        <td class="highlight-col">Debian 12 Bookworm Stable Base</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Kho Ứng dụng</strong></td>
+                        <td>.deb/.rpm/Snap/Flatpak</td>
+                        <td>Chỉ dùng .tpk</td>
+                        <td class="highlight-col">Gói Kép: TPK Native + 60,000+ .deb Debian</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Bảo mật Cấp Kernel</strong></td>
+                        <td>AppArmor / SELinux</td>
+                        <td>Smack MAC + Cynara</td>
+                        <td class="highlight-col">7 Lớp: Smack MAC + Cynara DB + Auth Prompt</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Tốc độ Mở App</strong></td>
+                        <td>Thường</td>
+                        <td>Nhanh</td>
+                        <td class="highlight-col">Cực nhanh nhờ Pre-fork Launchpad Pool</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Hỗ trợ Card NVIDIA</strong></td>
+                        <td>Hay lỗi Wayland</td>
+                        <td>Không hỗ trợ</td>
+                        <td class="highlight-col">Tự động cấu hình GBM/DRM hoặc X11 Session C</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2026 TizenOS Team. Phát triển bởi <a href="https://github.com/nguyenquocanhz/TizenOS" target="_blank">nguyenquocanhz</a> dựa trên Debian 12 Bookworm.</p>
+    </footer>
+
+</body>
+</html>

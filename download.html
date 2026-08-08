@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tải về TizenOS 1.0 (Debian Edition) — Official Downloads</title>
+    <meta name="description" content="Tải về đĩa Live ISO Hybrid (UEFI + MBR) và các tệp kiểm định Checksum/Signature của TizenOS.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header>
+        <div class="nav-container">
+            <a href="index.html" class="logo-brand">
+                <span>TizenOS</span>
+                <span class="logo-badge">Downloads</span>
+            </a>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Trang chủ</a></li>
+                    <li><a href="index.html#features">Tính năng</a></li>
+                    <li><a href="download.html" class="active">Tải về</a></li>
+                    <li><a href="https://github.com/nguyenquocanhz/TizenOS" target="_blank">GitHub</a></li>
+                </ul>
+            </nav>
+            <a href="https://github.com/nguyenquocanhz/TizenOS" target="_blank" class="btn-nav-download">GitHub Repo 🐙</a>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" style="margin-bottom: 30px;">
+        <div class="hero-pill">⚡ TizenOS 1.0 Bookworm Release</div>
+        <h1>Tải về <span>TizenOS 1.0</span></h1>
+        <p class="hero-subtitle">Chọn định dạng cài đặt phù hợp cho máy tính x86_64 hoặc ARM64 của bạn.</p>
+    </section>
+
+    <!-- Download Cards -->
+    <section class="download-cards">
+        
+        <!-- Live ISO Card -->
+        <div class="download-card featured">
+            <h3>TizenOS Live ISO (Hybrid)</h3>
+            <div class="download-meta">Phiên bản: 1.0.0-amd64 | Kích thước: 2.8 GB</div>
+            <p style="color: var(--text-secondary); margin-bottom: 24px;">
+                Đĩa cài đặt Hybrid hỗ trợ boot trực tiếp trên cả <strong>UEFI (Secure Boot)</strong> và <strong>Legacy MBR BIOS</strong>. Tích hợp sẵn bộ cài đặt GTK4 <code>tizenos-installer</code>.
+            </p>
+            <a href="https://github.com/nguyenquocanhz/TizenOS/releases" class="btn-primary" style="display: inline-block; width: 100%;">
+                Tải ISO Trực tiếp (Direct ISO) 💿
+            </a>
+            <div class="code-box">
+                # Kiểm tra SHA-256 Checksum:<br>
+                sha256sum tizenos-live.iso
+            </div>
+        </div>
+
+        <!-- Raw Image Card -->
+        <div class="download-card">
+            <h3>TizenOS Raw Disk Image (.img)</h3>
+            <div class="download-meta">Phiên bản: 1.0.0-amd64/arm64 | Kích thước: 3.2 GB</div>
+            <p style="color: var(--text-secondary); margin-bottom: 24px;">
+                Ảnh đĩa thô đã phân vùng sẵn thích hợp để flash ra USB/SD Card qua balenaEtcher hoặc chạy thử nghiệm ảo hóa QEMU/KVM.
+            </p>
+            <a href="https://github.com/nguyenquocanhz/TizenOS/releases" class="btn-secondary" style="display: inline-block; width: 100%;">
+                Tải Tệp .img 💾
+            </a>
+            <div class="code-box">
+                # Flash ra USB:<br>
+                sudo dd if=tizenos-disk.img of=/dev/sdX status=progress
+            </div>
+        </div>
+
+    </section>
+
+    <!-- QEMU Live Test Section -->
+    <section style="max-width: 1000px; margin: 0 auto 80px; padding: 0 24px;">
+        <div class="card-glass">
+            <h3 style="font-size: 1.5rem; margin-bottom: 16px; color: var(--accent-cyan);">🖥️ Khởi chạy Thử nghiệm Ngay trên QEMU / KVM</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                Bạn có thể test trực tiếp đĩa TizenOS Live ISO ngay trên máy tính mà không cần cài đặt bằng lệnh QEMU sau:
+            </p>
+            <div class="code-box" style="font-size: 0.95rem;">
+                qemu-system-x86_64 -cdrom tizenos-live.iso -m 4G -enable-kvm -vga virtio -display default
+            </div>
+        </div>
+    </section>
+
+    <!-- Checksum & Signature Verification -->
+    <section style="max-width: 1000px; margin: 0 auto 80px; padding: 0 24px;">
+        <div class="card-glass">
+            <h3 style="font-size: 1.5rem; margin-bottom: 16px; color: #fff;">🛡️ Mã Băm & Chữ Ký Số Kiểm Định</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                Xác minh tính toàn vẹn 100% của tệp đĩa ISO trước khi cài đặt:
+            </p>
+            <ul style="list-style: none; color: var(--text-secondary); display: flex; flex-direction: column; gap: 12px;">
+                <li>🔒 <strong>SHA256SUMS</strong>: <a href="https://github.com/nguyenquocanhz/TizenOS/raw/main/build/output/SHA256SUMS" style="color: var(--accent-cyan);">Xem Tệp SHA256SUMS</a></li>
+                <li>🔒 <strong>SHA512SUMS</strong>: <a href="https://github.com/nguyenquocanhz/TizenOS/raw/main/build/output/SHA512SUMS" style="color: var(--accent-cyan);">Xem Tệp SHA512SUMS</a></li>
+                <li>🔑 <strong>Công cụ Ký số signFile.exe</strong>: <a href="https://github.com/nguyenquocanhz/TizenOS/tree/main/tools/signFile" style="color: var(--accent-cyan);">Xem Công cụ signFile</a></li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2026 TizenOS Team. Phát triển bởi <a href="https://github.com/nguyenquocanhz/TizenOS" target="_blank">nguyenquocanhz</a> dựa trên Debian 12 Bookworm.</p>
+    </footer>
+
+</body>
+</html>
