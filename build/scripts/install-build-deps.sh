@@ -21,9 +21,9 @@ echo "[1/4] Cài đặt công cụ biên dịch C & Đóng gói Debian..."
 sudo -E apt-get install $APT_OPTS \
     build-essential debhelper dpkg-dev cmake pkg-config lintian reprepro gnupg ninja-build
 
-echo "[2/4] Cài đặt công cụ Khởi tạo Live ISO & Bootloader..."
+echo "[2/4] Cài đặt công cụ Khởi tạo Live ISO, Bootloader & ISOLINUX..."
 sudo -E apt-get install $APT_OPTS \
-    debootstrap squashfs-tools xorriso mtools syslinux-utils isolinux grub-pc-bin grub-efi-amd64-bin || true
+    debootstrap squashfs-tools xorriso genisoimage mtools syslinux syslinux-common syslinux-utils isolinux grub-pc-bin grub-efi-amd64-bin || true
 
 echo "[3/4] Cài đặt các thư viện C Development Headers cho TizenOS..."
 sudo -E apt-get install $APT_OPTS \
