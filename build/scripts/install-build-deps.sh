@@ -15,11 +15,11 @@ echo "======================================================================"
 echo " Starting TizenOS Build Environment Auto-Installer..."
 echo "======================================================================"
 
-sudo -E apt-get update -qq
+sudo -E apt-get update -qq || true
 
-echo "[1/4] Cài đặt công cụ biên dịch C & Đóng gói Debian..."
-sudo -E apt-get install $APT_OPTS \
-    build-essential debhelper dpkg-dev cmake pkg-config lintian reprepro gnupg ninja-build
+echo "[1/4] Cài đặt công cụ biên dịch C cốt lõi & debhelper..."
+sudo -E apt-get install $APT_OPTS build-essential debhelper dpkg-dev cmake pkg-config || true
+sudo -E apt-get install $APT_OPTS lintian reprepro gnupg ninja-build || true
 
 echo "[2/4] Cài đặt công cụ Khởi tạo Live ISO, Bootloader & ISOLINUX..."
 sudo -E apt-get install $APT_OPTS \

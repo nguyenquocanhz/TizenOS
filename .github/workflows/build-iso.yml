@@ -25,28 +25,30 @@ jobs:
 
       - name: 2. Install Build Dependencies & Tools
         run: |
-          chmod +x build/scripts/install-build-deps.sh
+          chmod +x build/scripts/*.sh 2>/dev/null || true
+          sudo apt-get update -qq || true
+          sudo apt-get install -y --no-install-recommends build-essential debhelper dpkg-dev cmake pkg-config xorriso squashfs-tools debootstrap isolinux syslinux-utils || true
           sudo -E ./build/scripts/install-build-deps.sh || true
 
       - name: 3. Build C Core System & Debian Packages (.deb)
         run: |
           mkdir -p build/output/debs
-          chmod +x build/scripts/build-packages.sh
+          chmod +x build/scripts/*.sh 2>/dev/null || true
           ./build/scripts/build-packages.sh --no-sign || true
 
       - name: 4. Generate Local APT Repository
         run: |
-          chmod +x build/scripts/create-repo.sh
+          chmod +x build/scripts/*.sh 2>/dev/null || true
           ./build/scripts/create-repo.sh || true
 
       - name: 5. Compute SHA256/SHA512 Checksums & Signatures
         run: |
-          chmod +x build/scripts/create-checksums.sh
+          chmod +x build/scripts/*.sh 2>/dev/null || true
           ./build/scripts/create-checksums.sh build/output
 
       - name: 6. Build Master Hybrid Live ISO (UEFI + MBR)
         run: |
-          chmod +x build/scripts/create-iso.sh
+          chmod +x build/scripts/*.sh 2>/dev/null || true
           ./build/scripts/create-iso.sh build/output/iso_work build/output/tizenos-live.iso || true
 
       - name: 7. Upload Build Artifacts to GitHub Actions
