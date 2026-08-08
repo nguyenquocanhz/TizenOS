@@ -1,0 +1,10 @@
+[Unit]
+Description=TizenOS Security Manager
+After=tizen-cynara.service tizen-smack.service
+
+[Service]
+ExecStart=/usr/bin/security-manager
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

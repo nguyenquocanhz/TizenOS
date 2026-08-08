@@ -1,0 +1,12 @@
+# PAM stack cho TizenOS
+# Hỗ trợ sinh trắc học (vân tay) và FIDO2 trước khi fallback về mật khẩu
+auth        sufficient    pam_fprintd.so
+auth        sufficient    pam_u2f.so
+auth        required      pam_unix.so nullok
+
+account     required      pam_unix.so
+
+password    required      pam_unix.so shadow
+
+session     required      pam_unix.so
+session     optional      pam_systemd.so

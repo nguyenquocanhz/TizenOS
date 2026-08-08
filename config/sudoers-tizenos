@@ -1,0 +1,13 @@
+# ==============================================================================
+# TizenOS Sudoers & Root Privilege Configuration (Ubuntu-style)
+# ==============================================================================
+
+# Cho phép các thành viên nhóm 'sudo' và 'wheel' thực thi mọi lệnh với sudo
+%sudo   ALL=(ALL:ALL) ALL
+%wheel  ALL=(ALL:ALL) ALL
+
+# Trong môi trường Live ISO: Cho phép tài khoản 'tizen' chạy sudo KHÔNG NẾU NHẬP PASS
+tizen   ALL=(ALL:ALL) NOPASSWD: ALL
+
+# Bảo toàn các biến môi trường Wayland & Display khi dùng sudo/pkexec
+Defaults env_keep += "WAYLAND_DISPLAY XDG_RUNTIME_DIR DISPLAY XAUTHORITY __GLX_VENDOR_LIBRARY_NAME"

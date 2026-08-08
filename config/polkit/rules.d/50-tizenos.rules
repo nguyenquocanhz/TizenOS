@@ -1,0 +1,13 @@
+/* Quy tắc Polkit cho TizenOS
+ * Cấp quyền mặc định cho nhóm quản trị 'wheel'
+ * Các hành động cụ thể cho network, power, package installation (tpkg/apt), display settings
+ */
+polkit.addRule(function(action, subject) {
+    if (action.id.indexOf("org.tizen.security.") == 0 ||
+        action.id.indexOf("org.freedesktop.NetworkManager.") == 0 ||
+        action.id.indexOf("org.freedesktop.upower.") == 0) {
+        if (subject.isInGroup("wheel")) {
+            return polkit.Result.YES;
+        }
+    }
+});

@@ -1,0 +1,16 @@
+Source: libtizen-camera
+Section: libs
+Priority: optional
+Maintainer: TizenOS Team <team@tizen.org>
+Build-Depends: debhelper (>= 11), cmake
+Standards-Version: 4.1.4
+
+Package: libtizen-camera1
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: TizenOS Camera API Library
+
+Package: libtizen-camera-dev
+Architecture: any
+Depends: libtizen-camera1 (= ${binary:Version}), ${misc:Depends}
+Description: Development files for libtizen-camera

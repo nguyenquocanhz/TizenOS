@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.16)
+project(tizen-panel C)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(GTK4 REQUIRED gtk4 gtk4-layer-shell-0)
+add_executable(tizen-panel src/panel.c src/app-menu.c src/system-tray.c src/clock.c)
+target_link_libraries(tizen-panel ${GTK4_LIBRARIES})

@@ -1,0 +1,7 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: tizenos-meta
+Upstream-Contact: TizenOS Team <dev@tizenos.org>
+
+Files: *
+Copyright: 2026 TizenOS Team
+License: GPL-2.0-or-later

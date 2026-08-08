@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Install TizenOS
+Name[vi]=Cài đặt TizenOS
+Comment=Install TizenOS on your computer
+Comment[vi]=Cài đặt hệ điều hành TizenOS lên máy tính
+Exec=pkexec tizenos-installer
+Icon=system-software-install
+Terminal=false
+Type=Application
+Categories=System;Setup;
+StartupNotify=true

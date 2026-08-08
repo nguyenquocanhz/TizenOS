@@ -1,0 +1,6 @@
+Source: tizen-compositor
+Section: x11
+Priority: optional
+Maintainer: TizenOS Team <team@tizenos.org>
+Build-Depends: debhelper-compat (= 13), cmake, libwlroots-dev, libwayland-dev, libxkbcommon-dev
+Standards-Version: 4.5.1

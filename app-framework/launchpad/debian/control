@@ -1,0 +1,12 @@
+Source: launchpad
+Section: utils
+Priority: optional
+Maintainer: TizenOS Team <team@tizenos.org>
+Build-Depends: debhelper (>= 10), cmake
+Standards-Version: 4.1.4
+
+Package: launchpad
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Tizen Launchpad Daemon
+ Quản lý tiến trình nạp trước (pre-fork) để tăng tốc độ mở ứng dụng.

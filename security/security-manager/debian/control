@@ -1,0 +1,11 @@
+Source: security-manager
+Maintainer: TizenOS Security Team <security@tizen.org>
+Section: admin
+Priority: optional
+Build-Depends: debhelper-compat (= 13), cmake, smack-utils-dev, cynara-dev
+
+Package: security-manager
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: TizenOS Security Manager
+ Trình quản lý bảo mật ứng dụng: thiết lập Smack, đăng ký Privilege thông qua Cynara.

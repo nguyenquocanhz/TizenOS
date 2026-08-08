@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="tizen_shell">
+  <interface name="tizen_shell_manager" version="1">
+    <description summary="Tizen custom shell protocol"/>
+  </interface>
+</protocol>

@@ -1,0 +1,6 @@
+libtizen-core (1.0.0-1) unstable; urgency=medium
+
+  * Bản phát hành đầu tiên cho hệ thống TizenOS.
+  * Cung cấp logging qua systemd-journal và tiện ích cơ bản.
+
+ -- TizenOS Team <team@tizenos.org>  Sun, 09 Aug 2026 01:49:00 +0700

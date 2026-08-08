@@ -1,0 +1,22 @@
+/* TizenOS Default Theme - Glassmorphism */
+/* Màu chủ đạo Tizen Blue: #0069B4 */
+
+window {
+    background-color: rgba(255, 255, 255, 0.6); /* Nền kính mờ */
+    border-radius: 12px; /* Góc bo tròn */
+    box-shadow: 0 8px 32px 0 rgba(0, 105, 180, 0.37);
+    backdrop-filter: blur(10px);
+    -gtk-icon-theme: "Adwaita";
+}
+
+button {
+    background-color: #0069B4;
+    color: white;
+    border-radius: 8px;
+    padding: 8px 16px;
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    background-color: #005599;
+}

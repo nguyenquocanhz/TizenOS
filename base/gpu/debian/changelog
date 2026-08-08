@@ -1,0 +1,10 @@
+tizenos-gpu (1.0.0-1) bookworm; urgency=medium
+
+  * Initial release
+  * GPU detection with sysfs/lspci
+  * NVIDIA conflict resolution (nouveau blacklist, modeset, GBM)
+  * Wayland/X11 intelligent fallback
+  * PRIME hybrid GPU support
+  * eGPU hotplug monitoring
+
+ -- TizenOS Team <dev@tizenos.org>  Sat, 09 Aug 2026 01:00:00 +0700

@@ -1,0 +1,45 @@
+Source: tizenos-meta
+Section: metapackages
+Priority: optional
+Maintainer: TizenOS Team <dev@tizenos.org>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+
+Package: tizenos-desktop
+Architecture: all
+Depends: tizenos-core, tizenos-gpu-common, tizenos-shell, tizenos-settings,
+         tizenos-app-framework, tizenos-package-manager, tizenos-multimedia,
+         systemd, dbus, networkmanager, pipewire, wireplumber,
+         greetd, xwayland, fonts-noto
+Description: TizenOS Desktop Environment (meta-package)
+ Complete TizenOS desktop including Wayland compositor, panel, launcher,
+ settings, and all core services.
+
+Package: tizenos-core
+Architecture: all
+Depends: tizenos-gpu-common, libtizen-core, libtizen-dbus,
+         tizenos-security-manager, tizenos-cynara
+Description: TizenOS Core System (meta-package)
+ Core components and libraries for TizenOS.
+
+Package: tizenos-minimal
+Architecture: all 
+Depends: tizenos-gpu-common, systemd, dbus, apt
+Description: TizenOS Minimal System (meta-package)
+ Bare minimum TizenOS with GPU detection, no GUI.
+
+Package: tizenos-nvidia
+Architecture: all
+Depends: tizenos-gpu-nvidia, nvidia-driver
+Recommends: nvidia-settings, nvidia-vaapi-driver
+Description: TizenOS NVIDIA Support (meta-package)
+ Meta-package to pull in NVIDIA proprietary drivers and related tools.
+
+Package: tizenos-installer-udeb
+Package-Type: udeb
+Architecture: all
+Section: debian-installer
+Depends: tizenos-gpu-common-udeb
+Description: TizenOS Installer components
+ Installer components for debian-installer.
+XB-Installer-Menu-Item: 1800

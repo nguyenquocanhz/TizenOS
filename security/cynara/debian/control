@@ -1,0 +1,11 @@
+Source: cynara
+Maintainer: TizenOS Security Team <security@tizen.org>
+Section: admin
+Priority: optional
+Build-Depends: debhelper-compat (= 13), cmake, libsqlite3-dev, libdbus-1-dev
+
+Package: cynara
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: TizenOS Cynara Policy Engine
+ Hệ thống quản lý quyền truy cập và phân giải chính sách (policy engine).

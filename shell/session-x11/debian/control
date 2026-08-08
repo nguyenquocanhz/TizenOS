@@ -1,0 +1,12 @@
+Source: tizenos-session-x11
+Section: x11
+Priority: optional
+Maintainer: TizenOS Team <team@tizenos.org>
+Build-Depends: debhelper-compat (= 13), cmake, libx11-dev
+Standards-Version: 4.6.0
+
+Package: tizenos-session-x11
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, xserver-xorg, xinit
+Description: TizenOS Standalone X11 Session and Window Manager
+ Lightweight EWMH/ICCCM window manager and session launcher for TizenOS on Debian.

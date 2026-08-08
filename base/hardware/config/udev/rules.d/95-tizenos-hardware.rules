@@ -1,0 +1,16 @@
+# TizenOS Hardware Udev Rules
+
+# 1. NVMe APST (Autonomous Power State Transition) - Quản lý nguồn năng lượng cho SSD NVMe
+ACTION=="add", SUBSYSTEM=="nvme", KERNEL=="nvme[0-9]*", ATTR{queue/scheduler}="none"
+ACTION=="add", SUBSYSTEM=="nvme", KERNEL=="nvme[0-9]*", RUN+="/usr/sbin/nvme set-feature /dev/%k -f 0x0c -v 0"
+
+# 2. Wi-Fi Power Save - Tối ưu hoá nguồn cho thiết bị Wi-Fi (iwlwifi, ath, rtw)
+ACTION=="add", SUBSYSTEM=="net", KERNEL=="wl*", RUN+="/sbin/iw dev %k set power_save on"
+
+# 3. LAN Offloading & Wake-on-LAN (WOL)
+# Bật WOL cho các card mạng dây e1000e, igc, r8169
+ACTION=="add", SUBSYSTEM=="net", KERNEL=="en*", RUN+="/sbin/ethtool -s %k wol g"
+
+# 4. Bluetooth Auto-enable
+# Đảm bảo Bluetooth controller luôn được kích hoạt khi cắm (tránh trạng thái soft-blocked)
+ACTION=="add", SUBSYSTEM=="bluetooth", KERNEL=="hci[0-9]*", RUN+="/usr/bin/hciconfig %k up"

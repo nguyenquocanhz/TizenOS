@@ -1,0 +1,6 @@
+Source: tizen-settings
+Section: x11
+Priority: optional
+Maintainer: TizenOS Team
+Build-Depends: debhelper-compat (= 13), cmake, libgtk-4-dev
+Standards-Version: 4.5.1

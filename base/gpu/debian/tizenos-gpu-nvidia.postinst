@@ -1,0 +1,14 @@
+#!/bin/bash
+set -e
+case "$1" in
+    configure)
+        systemctl daemon-reload || true
+        systemctl enable tizenos-nvidia-setup.service || true
+        # Cập nhật initramfs để apply modprobe blacklist
+        if command -v update-initramfs > /dev/null; then
+            update-initramfs -u || true
+        fi
+        echo 'TizenOS: NVIDIA setup configured. Reboot required.'
+        ;;
+esac
+#DEBHELPER#

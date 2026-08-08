@@ -1,0 +1,14 @@
+Source: tizenos-installer
+Section: admin
+Priority: optional
+Maintainer: TizenOS Team <team@tizenos.org>
+Build-Depends: debhelper (>= 12), cmake, pkg-config, libgtk-4-dev
+Standards-Version: 4.5.0
+Homepage: https://tizenos.org
+
+Package: tizenos-installer
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, parted, cryptsetup, dosfstools, e2fsprogs
+Description: OS Installation Wizard for TizenOS
+ GTK4 based 7-step installer wizard for TizenOS (Debian based).
+ Supports full disk erase, LUKS encryption, ESP, and ext4 rootfs.

@@ -1,0 +1,80 @@
+# ==============================================================================
+# TizenOS Modern Desktop - GRUB2 Theme Specification
+# ==============================================================================
+# Premium Dark Glassmorphism Theme với Tizen Blue Accent (#0069B4)
+# Hỗ trợ độ phân giải 1920x1080 (FHD), 2560x1440 (2K) và 3840x2160 (4K)
+# ==============================================================================
+
+# Global properties
+desktop-image: "background.png"
+desktop-color: "#0a0f1d"
+terminal-box: "terminal_box.png"
+terminal-font: "Unifont Regular 16"
+
+# Title text
++ label {
+    top = 10%
+    left = 0
+    width = 100%
+    height = 60
+    text = "TIZENOS DEBIAN CORE"
+    font = "DejaVu Sans Bold 32"
+    color = "#ffffff"
+    align = "center"
+}
+
+# Subtitle / Sub-heading
++ label {
+    top = 16%
+    left = 0
+    width = 100%
+    height = 30
+    text = "Next-Generation Operating System • Live & Installation Boot Menu"
+    font = "DejaVu Sans Regular 16"
+    color = "#00a3ff"
+    align = "center"
+}
+
+# Main Boot Menu Box
++ boot_menu {
+    left = 25%
+    top = 28%
+    width = 50%
+    height = 45%
+    item_font = "DejaVu Sans Regular 18"
+    item_color = "#a0abbd"
+    selected_item_color = "#ffffff"
+    item_height = 48
+    item_padding = 12
+    item_spacing = 10
+    icon_width = 32
+    icon_height = 32
+    item_icon_space = 16
+    selected_item_pixmap_style = "select_bkg_*.png"
+}
+
+# Timeout Countdown Progress Bar
++ progress_bar {
+    top = 80%
+    left = 30%
+    width = 40%
+    height = 10
+    text = "Tự động khởi động trong %d giây..."
+    font = "DejaVu Sans Regular 14"
+    text_color = "#8899ac"
+    border_color = "#0069b4"
+    bg_color = "#151d2a"
+    bar_color = "#00a3ff"
+}
+
+# Hotkey guidance bar at bottom
++ label {
+    top = 88%
+    left = 0
+    width = 100%
+    height = 30
+    text = "[↑/↓] Chọn tùy chọn    [Enter] Khởi động    [e] Chỉnh sửa lệnh boot    [c] GRUB CLI Command"
+    font = "DejaVu Sans Regular 14"
+    color = "#607085"
+    align = "center"
+}

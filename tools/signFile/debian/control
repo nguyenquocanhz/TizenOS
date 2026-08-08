@@ -1,0 +1,13 @@
+Source: signfile
+Section: utils
+Priority: optional
+Maintainer: TizenOS Team <dev@tizenos.org>
+Build-Depends: debhelper-compat (= 13), cmake (>= 3.16), libssl-dev (>= 3.0.0)
+Standards-Version: 4.6.2
+
+Package: signfile
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libssl3
+Description: TizenOS Standalone Cryptographic Digital Signature & Verification Utility
+ Standalone CLI utility for signing files and verifying digital signatures using
+ Ed25519, RSA-4096 PSS, and ECDSA P-256 with OpenSSL 3.0.

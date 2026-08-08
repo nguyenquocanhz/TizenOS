@@ -1,0 +1,16 @@
+# ==============================================================================
+# TizenOS Live ISO Auto-Login Configuration (Greetd Display Manager)
+# ==============================================================================
+
+[terminal]
+vt = 1
+
+[default_session]
+# Tự động đăng nhập thẳng vào Live Session (User: tizen) không đòi hỏi Mật khẩu
+command = "tizenos-compositor --session wayland"
+user = "tizen"
+
+[initial_session]
+# Khởi chạy bộ cài đặt TizenOS Installer tự động khi boot đĩa Live ISO
+command = "tizenos-compositor --autostart-installer"
+user = "tizen"

@@ -1,0 +1,21 @@
+FROM debian:bookworm
+
+# Cập nhật hệ thống và cài đặt cơ bản
+RUN apt-get update && apt-get install -y \
+    build-essential debhelper dpkg-dev cmake pkg-config lintian \
+    reprepro gnupg gcc-aarch64-linux-gnu g++-aarch64-linux-gnu qemu-user-static \
+    libwayland-dev libdrm-dev libgbm-dev libegl1-mesa-dev libgles2-mesa-dev \
+    libsystemd-dev libdbus-1-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Đặt thư mục làm việc
+WORKDIR /workspace
+
+# Sao chép mã nguồn
+COPY . /workspace
+
+# Cấp quyền thực thi cho script
+RUN chmod +x /workspace/build/scripts/build-packages.sh
+
+# Entry point để chạy script build
+ENTRYPOINT ["/workspace/build/scripts/build-packages.sh"]

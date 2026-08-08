@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.16)
+project(tizen-settings C)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(GTK4 REQUIRED gtk4)
+add_executable(tizen-settings src/settings.c src/display.c src/network.c src/sound.c src/about.c)
+target_link_libraries(tizen-settings ${GTK4_LIBRARIES})

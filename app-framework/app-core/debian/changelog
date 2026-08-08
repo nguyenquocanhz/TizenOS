@@ -1,0 +1,5 @@
+capi-appfw-application (1.0.0-1) unstable; urgency=medium
+
+  * Bản phát hành đầu tiên cho hệ điều hành TizenOS Debian 12.
+
+ -- TizenOS Team <team@tizenos.org>  Thu, 01 Jan 2026 00:00:00 +0000

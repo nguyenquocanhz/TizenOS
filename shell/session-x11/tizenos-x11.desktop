@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=TizenOS X11
+Comment=This session logs you into TizenOS X11
+Exec=tizenos-session-x11
+Type=Application
+DesktopNames=TizenOS

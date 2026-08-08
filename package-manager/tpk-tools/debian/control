@@ -1,0 +1,10 @@
+Source: tpk-tools
+Section: utils
+Priority: optional
+Maintainer: TizenOS <admin@tizenos.org>
+Build-Depends: debhelper (>= 11), cmake, libzip-dev, libssl-dev
+
+Package: tpk-tools
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: TizenOS Package Format utilities

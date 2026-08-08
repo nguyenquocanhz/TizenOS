@@ -1,0 +1,6 @@
+# PAM stack cho Greetd (Display Manager)
+# Kế thừa cấu hình xác thực từ tizen-auth
+auth        include       tizen-auth
+account     include       tizen-auth
+password    include       tizen-auth
+session     include       tizen-auth

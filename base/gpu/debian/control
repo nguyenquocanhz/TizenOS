@@ -1,0 +1,47 @@
+Source: tizenos-gpu
+Section: admin
+Priority: optional
+Maintainer: TizenOS Team <dev@tizenos.org>
+Build-Depends: debhelper-compat (= 13), cmake (>= 3.16), pkg-config
+Standards-Version: 4.6.2
+
+Package: tizenos-gpu-common
+Architecture: all
+Depends: pciutils, systemd, ${misc:Depends}
+Description: TizenOS GPU detection and display fallback system
+ This package provides the base GPU detection scripts and systemd
+ services required for identifying and configuring graphics hardware
+ on TizenOS.
+
+Package: tizenos-gpu-nvidia
+Architecture: all
+Depends: tizenos-gpu-common, ${misc:Depends}
+Recommends: nvidia-driver (>= 495)
+Conflicts: tizenos-gpu-nouveau
+Description: NVIDIA proprietary driver configuration for TizenOS
+ Contains specific scripts and configurations to support the NVIDIA
+ proprietary drivers on TizenOS Wayland/XWayland compositors.
+
+Package: tizenos-gpu-nouveau
+Architecture: all
+Depends: tizenos-gpu-common, xserver-xorg-video-nouveau, ${misc:Depends}
+Conflicts: tizenos-gpu-nvidia
+Description: Nouveau open-source driver configuration for TizenOS
+ Configuration and scripts for using the open-source Nouveau driver
+ with TizenOS.
+
+Package: tizenos-gpu-compositor
+Architecture: any
+Depends: tizenos-gpu-common, libwlroots-dev, ${shlibs:Depends}, ${misc:Depends}
+Description: TizenOS compositor GPU backend
+ Hardware-accelerated GPU backend components for the TizenOS
+ Wayland compositor based on wlroots.
+
+Package: tizenos-gpu-common-udeb
+Package-Type: udeb
+Section: debian-installer
+Architecture: all
+Depends: pciutils-udeb, ${misc:Depends}
+Description: GPU detection for TizenOS installer
+ Minimal GPU detection scripts for the debian-installer environment
+ used during TizenOS installation.

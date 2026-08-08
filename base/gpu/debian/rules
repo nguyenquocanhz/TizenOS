@@ -1,0 +1,35 @@
+#!/usr/bin/make -f
+# debian/rules cho tizenos-gpu
+
+# Bật tất cả thông báo lỗi
+export DH_VERBOSE = 1
+
+# Sử dụng debhelper (dh) kết hợp hệ thống build cmake
+%:
+	dh $@ --buildsystem=cmake
+
+# Ghi đè bước auto_configure của CMake (Thêm cờ tuỳ chỉnh nếu cần)
+override_dh_auto_configure:
+	# Cấu hình CMake cho TizenOS
+	dh_auto_configure -- \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_BUILD_TYPE=Release
+
+# Ghi đè bước install để tự động chia file vào nhiều binary package
+override_dh_install:
+	# Phân phối file cho các package dựa trên file .install
+	dh_install
+
+# Ghi đè bước installsystemd để kích hoạt các service tự động
+override_dh_installsystemd:
+	# Kích hoạt service cơ bản
+	dh_installsystemd -p tizenos-gpu-common --name=tizenos-gpu-detect
+	dh_installsystemd -p tizenos-gpu-common --name=tizenos-gpu-monitor
+	# Kích hoạt service cho NVIDIA
+	dh_installsystemd -p tizenos-gpu-nvidia --name=tizenos-nvidia-setup
+
+# Bỏ qua kiểm thử nếu biến DEB_BUILD_OPTIONS có chứa 'nocheck'
+override_dh_auto_test:
+ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
+	dh_auto_test
+endif

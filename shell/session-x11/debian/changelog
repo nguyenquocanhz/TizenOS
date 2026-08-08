@@ -1,0 +1,5 @@
+tizenos-session-x11 (1.0-1) unstable; urgency=medium
+
+  * Initial release of TizenOS X11 Session Manager.
+
+ -- TizenOS Team <team@tizenos.org>  Sun, 09 Aug 2026 02:00:00 +0700

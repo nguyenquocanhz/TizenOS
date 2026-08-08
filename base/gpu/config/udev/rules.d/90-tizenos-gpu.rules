@@ -1,0 +1,37 @@
+# TizenOS GPU Udev Rules
+# =============================================================================
+# Quản lý quyền DRM render nodes, hotplug detection, và NVIDIA tagging.
+# =============================================================================
+
+# ---- DRM Render Nodes --------------------------------------------------------
+# Cho phép group "render" truy cập render nodes (cho non-root Wayland)
+SUBSYSTEM=="drm", KERNEL=="renderD*", GROUP="render", MODE="0660"
+
+# Cho phép group "video" truy cập card nodes
+SUBSYSTEM=="drm", KERNEL=="card[0-9]*", GROUP="video", MODE="0660"
+
+# ---- eGPU Hotplug Detection --------------------------------------------------
+# Khi eGPU được kết nối hoặc ngắt kết nối → chạy lại GPU detection
+SUBSYSTEM=="drm", ACTION=="add", KERNEL=="card[0-9]*", \
+    TAG+="systemd", ENV{SYSTEMD_WANTS}="tizenos-gpu-monitor.service", \
+    RUN+="/bin/sh -c 'echo GPU_HOTPLUG_ADD > /run/tizenos/gpu-event 2>/dev/null || true'"
+
+SUBSYSTEM=="drm", ACTION=="remove", KERNEL=="card[0-9]*", \
+    RUN+="/bin/sh -c 'echo GPU_HOTPLUG_REMOVE > /run/tizenos/gpu-event 2>/dev/null || true'"
+
+# ---- NVIDIA Device Tagging ---------------------------------------------------
+# Tag NVIDIA VGA devices cho systemd dependency tracking
+# PCI Class 0x030000 = VGA compatible controller
+# PCI Class 0x030200 = 3D controller (secondary GPU in PRIME)
+SUBSYSTEM=="pci", ATTRS{vendor}=="0x10de", ATTRS{class}=="0x03[02]0*", \
+    TAG+="systemd", ENV{SYSTEMD_WANTS}="tizenos-nvidia-setup.service"
+
+# ---- AMD GPU -----------------------------------------------------------------
+# AMD GPU power management: enable runtime PM mặc định
+SUBSYSTEM=="pci", ATTRS{vendor}=="0x1002", ATTRS{class}=="0x030000", \
+    ATTR{power/control}="auto"
+
+# ---- Intel GPU ---------------------------------------------------------------
+# Intel GPU: enable GuC/HuC firmware loading hint
+SUBSYSTEM=="pci", ATTRS{vendor}=="0x8086", ATTRS{class}=="0x030000", \
+    TAG+="tizenos-gpu-intel"

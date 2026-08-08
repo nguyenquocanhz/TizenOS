@@ -1,0 +1,11 @@
+[Unit]
+Description=TizenOS Disk Image Virtual Drive Service
+After=udisks2.service
+
+[Service]
+Type=dbus
+BusName=org.tizen.DiskImage
+ExecStart=/usr/bin/tizenos-mount-iso daemon
+
+[Install]
+WantedBy=multi-user.target

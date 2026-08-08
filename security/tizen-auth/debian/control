@@ -1,0 +1,13 @@
+Source: tizen-auth
+Section: admin
+Priority: optional
+Maintainer: TizenOS Security Team <security@tizen.org>
+Build-Depends: debhelper (>= 12), cmake, libpam0g-dev, libpolkit-gobject-1-dev, libdbus-1-dev
+Standards-Version: 4.5.0
+
+Package: tizen-auth
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, fprintd, libpam-fprintd, libpam-u2f
+Description: TizenOS Authentication Framework
+ Cung cấp D-Bus Auth daemon, Keyring library, và cấu hình PAM/Polkit
+ chuẩn hóa cho môi trường TizenOS. Hỗ trợ xác thực sinh trắc học và FIDO2.

@@ -1,0 +1,5 @@
+tizenos-hardware-stack (1.0.0-1) unstable; urgency=medium
+
+  * Initial release of TizenOS Hardware & Storage Driver Stack.
+
+ -- TizenOS Core Team <core@tizenos.org>  Sun, 09 Aug 2026 02:32:03 +0700

@@ -1,0 +1,36 @@
+[Unit]
+Description=TizenOS GPU Detection Service
+Documentation=file:///usr/share/doc/tizenos/gpu-management.md
+After=systemd-modules-load.service systemd-udevd.service
+Before=display-manager.service tizenos-nvidia-setup.service
+DefaultDependencies=no
+
+# Đảm bảo DRM subsystem đã sẵn sàng
+Wants=systemd-udevd.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStartPre=/bin/mkdir -p /run/tizenos
+
+# Chạy GPU detection script
+ExecStart=/usr/lib/tizenos/gpu/tizenos-gpu-detect.sh
+
+# Điều kiện: chỉ chạy nếu có DRM subsystem
+ConditionPathIsDirectory=/sys/class/drm
+
+# Bảo mật: script cần root để đọc sysfs
+# nhưng giới hạn capabilities
+CapabilityBoundingSet=CAP_SYS_ADMIN CAP_DAC_READ_SEARCH
+ProtectSystem=strict
+ReadWritePaths=/run/tizenos
+ProtectHome=yes
+NoNewPrivileges=no
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=tizenos-gpu-detect
+
+[Install]
+WantedBy=graphical.target multi-user.target

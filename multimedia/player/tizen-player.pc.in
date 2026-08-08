@@ -1,0 +1,10 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: libtizen-player
+Description: TizenOS Media Player Library
+Version: 1.0
+Libs: -L${libdir} -ltizen-player
+Cflags: -I${includedir}

@@ -1,0 +1,11 @@
+[Unit]
+Description=Cynara Policy Engine Daemon
+After=dbus.service
+
+[Service]
+ExecStart=/usr/bin/cynara-daemon
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target

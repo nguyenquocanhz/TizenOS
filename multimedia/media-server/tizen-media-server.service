@@ -1,0 +1,12 @@
+[Unit]
+Description=TizenOS Media Server Daemon
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/tizen-media-server
+Restart=always
+User=tizen-media
+Group=tizen-media
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,3 @@
+usr/include/tizen/*
+usr/lib/*/libtizen-core.so
+usr/lib/*/pkgconfig/tizen-core.pc

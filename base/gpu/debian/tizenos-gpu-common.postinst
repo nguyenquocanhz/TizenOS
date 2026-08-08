@@ -1,0 +1,12 @@
+#!/bin/bash
+set -e
+case "$1" in
+    configure)
+        # Kích hoạt systemd services
+        systemctl daemon-reload || true
+        systemctl enable tizenos-gpu-detect.service || true
+        # Thêm group render nếu chưa có
+        getent group render > /dev/null || groupadd -r render
+        ;;
+esac
+#DEBHELPER#

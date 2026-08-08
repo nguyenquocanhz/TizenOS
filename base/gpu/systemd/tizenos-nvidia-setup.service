@@ -1,0 +1,34 @@
+[Unit]
+Description=TizenOS NVIDIA Driver Setup
+Documentation=file:///usr/share/doc/tizenos/gpu-management.md
+After=tizenos-gpu-detect.service
+Before=display-manager.service
+
+# Chỉ chạy khi NVIDIA module đã loaded
+ConditionPathExists=/sys/module/nvidia
+ConditionPathExists=/run/tizenos/gpu-info.env
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+
+# Setup NVIDIA: blacklist nouveau, cấu hình modeset, env vars
+ExecStart=/usr/lib/tizenos/gpu/tizenos-nvidia-setup.sh setup
+
+# Rollback khi service stop (tùy chọn, thường không dùng)
+# ExecStop=/usr/lib/tizenos/gpu/tizenos-nvidia-setup.sh rollback
+
+# Verify sau setup
+ExecStartPost=/usr/lib/tizenos/gpu/tizenos-nvidia-setup.sh verify
+
+# Bảo mật
+ReadWritePaths=/etc/modprobe.d /etc/environment.d /etc/default /run/tizenos /usr/bin /usr/lib/systemd
+ProtectHome=yes
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=tizenos-nvidia-setup
+
+[Install]
+WantedBy=graphical.target

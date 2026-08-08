@@ -1,0 +1,10 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: capi-appfw-application
+Description: Tizen Application Framework Core Library
+Version: 1.0.0
+Libs: -L${libdir} -lcapi-appfw-application
+Cflags: -I${includedir}/tizen

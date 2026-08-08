@@ -1,0 +1,12 @@
+#!/bin/bash
+set -e
+case "$1" in
+    remove|purge)
+        # Rollback NVIDIA changes
+        if [ -x /usr/lib/tizenos/gpu/tizenos-nvidia-setup.sh ]; then
+            /usr/lib/tizenos/gpu/tizenos-nvidia-setup.sh rollback || true
+        fi
+        systemctl disable tizenos-nvidia-setup.service || true
+        ;;
+esac
+#DEBHELPER#

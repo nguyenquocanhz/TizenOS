@@ -1,0 +1,5 @@
+launchpad (1.0.0-1) unstable; urgency=medium
+
+  * Phiên bản launchpad daemon đầu tiên cho TizenOS.
+
+ -- TizenOS Team <team@tizenos.org>  Thu, 01 Jan 2026 00:00:00 +0000

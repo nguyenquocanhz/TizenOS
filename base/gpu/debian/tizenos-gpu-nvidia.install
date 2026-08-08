@@ -1,0 +1,4 @@
+usr/lib/tizenos/gpu/tizenos-nvidia-setup.sh
+usr/lib/systemd/system/tizenos-nvidia-setup.service
+etc/modprobe.d/tizenos-nouveau-blacklist.conf
+etc/X11/xorg.conf.d/10-tizenos-nvidia.conf

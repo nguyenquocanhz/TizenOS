@@ -1,0 +1,13 @@
+[Unit]
+Description=TizenOS Hardware Detection Service
+DefaultDependencies=no
+After=systemd-udev-settle.service local-fs.target
+Before=basic.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/tizenos/scripts/tizenos-hardware-detect.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=sysinit.target

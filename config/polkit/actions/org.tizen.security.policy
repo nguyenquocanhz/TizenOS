@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC
+ "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<policyconfig>
+  <vendor>TizenOS Project</vendor>
+  <vendor_url>http://tizen.org/</vendor_url>
+
+  <action id="org.tizen.security.policy.install">
+    <description>Cài đặt gói ứng dụng trên hệ thống</description>
+    <message>Yêu cầu xác thực quản trị viên để cài đặt phần mềm</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
+  <action id="org.tizen.security.policy.display">
+    <description>Sửa đổi cấu hình hiển thị</description>
+    <message>Yêu cầu quyền để thay đổi thiết lập hiển thị màn hình</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+  </action>
+</policyconfig>

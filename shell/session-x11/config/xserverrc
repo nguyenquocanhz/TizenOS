@@ -1,0 +1,3 @@
+#!/bin/sh
+# Khởi động máy chủ Xorg với cấu hình tối ưu
+exec /usr/bin/X -nolisten tcp "$@"

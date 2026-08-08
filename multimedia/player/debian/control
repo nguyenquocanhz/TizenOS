@@ -1,0 +1,16 @@
+Source: libtizen-player
+Section: libs
+Priority: optional
+Maintainer: TizenOS Team <team@tizen.org>
+Build-Depends: debhelper (>= 11), cmake
+Standards-Version: 4.1.4
+
+Package: libtizen-player1
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: TizenOS Media Player Library
+
+Package: libtizen-player-dev
+Architecture: any
+Depends: libtizen-player1 (= ${binary:Version}), ${misc:Depends}
+Description: Development files for libtizen-player

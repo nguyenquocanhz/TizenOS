@@ -1,0 +1,35 @@
+Source: tizenos-hardware-stack
+Section: admin
+Priority: optional
+Maintainer: TizenOS Core Team <core@tizenos.org>
+Build-Depends: debhelper-compat (= 13), cmake
+Standards-Version: 4.6.2
+Homepage: https://www.tizenos.org
+
+Package: tizenos-hardware-wifi
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, firmware-iwlwifi, firmware-realtek, firmware-atheros, iwd, wireless-regdb
+Description: TizenOS Wi-Fi hardware driver stack
+ Cung cấp firmware và công cụ quản lý Wi-Fi cho TizenOS.
+ Bao gồm iwlwifi (Intel), realtek, atheros và broadcom.
+
+Package: tizenos-hardware-bluetooth
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, bluez, bluez-tools, pipewire-audio-codecs, pulseaudio-module-bluetooth
+Description: TizenOS Bluetooth hardware driver stack
+ Ngăn xếp trình điều khiển Bluetooth (BlueZ) cho TizenOS.
+ Hỗ trợ tai nghe không dây, chia sẻ file, và codec âm thanh cao cấp.
+
+Package: tizenos-hardware-lan
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, network-manager, ethtool
+Description: TizenOS LAN networking hardware driver stack
+ Trình điều khiển và công cụ cho card mạng LAN (e1000e, r8169, igc).
+ Đi kèm thiết lập Wake-on-LAN và offloading.
+
+Package: tizenos-hardware-storage
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, nvme-cli, smartmontools, mdadm, lvm2, cryptsetup, dmraid
+Description: TizenOS NVMe and RAID storage stack
+ Công cụ quản trị lưu trữ cao cấp trên TizenOS.
+ Hỗ trợ kiểm tra NVMe 1.4/2.0, thiết lập RAID phần mềm (mdadm) và LVM2.

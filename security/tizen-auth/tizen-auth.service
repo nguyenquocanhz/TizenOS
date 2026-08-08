@@ -1,0 +1,15 @@
+[Unit]
+Description=TizenOS Authentication & Permission Daemon
+After=dbus.service
+Requires=dbus.service
+
+[Service]
+Type=dbus
+BusName=org.tizen.Auth
+ExecStart=/usr/bin/tizen-auth-daemon
+Restart=on-failure
+ProtectSystem=strict
+ProtectHome=read-only
+
+[Install]
+WantedBy=multi-user.target

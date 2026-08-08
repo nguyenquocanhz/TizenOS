@@ -1,0 +1,12 @@
+[Unit]
+Description=TizenOS Installer Service
+After=display-manager.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/tizenos-installer
+Environment=DISPLAY=:0
+User=root
+
+[Install]
+WantedBy=graphical.target

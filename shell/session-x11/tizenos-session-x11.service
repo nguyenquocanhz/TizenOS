@@ -1,0 +1,11 @@
+[Unit]
+Description=TizenOS X11 Session Manager
+After=display-manager.service
+
+[Service]
+ExecStart=/usr/bin/tizenos-session-x11
+Restart=on-failure
+Environment=DISPLAY=:0
+
+[Install]
+WantedBy=graphical.target

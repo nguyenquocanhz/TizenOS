@@ -1,0 +1,12 @@
+#!/bin/sh
+# TizenOS X11 Session Script
+# Cấu hình con trỏ chuột
+xsetroot -cursor_name left_ptr
+
+# Tải tài nguyên X11
+if [ -f ~/.Xresources ]; then
+    xrdb -merge ~/.Xresources
+fi
+
+# Chạy session launcher chính
+exec tizenos-session-x11

@@ -1,0 +1,12 @@
+Source: tizen-media-server
+Section: utils
+Priority: optional
+Maintainer: TizenOS Team <team@tizen.org>
+Build-Depends: debhelper (>= 11), cmake, libglib2.0-dev, libgstreamer1.0-dev, libgstreamer-plugins-base1.0-dev, libsqlite3-dev
+Standards-Version: 4.1.4
+
+Package: tizen-media-server
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: TizenOS Media Server Daemon
+ A daemon for scanning and managing media files in TizenOS using SQLite and GStreamer.

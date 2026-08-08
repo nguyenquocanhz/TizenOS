@@ -1,0 +1,10 @@
+Source: pkgmgr-server
+Section: admin
+Priority: optional
+Maintainer: TizenOS <admin@tizenos.org>
+Build-Depends: debhelper (>= 11), cmake, libglib2.0-dev, libsqlite3-dev
+
+Package: pkgmgr-server
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: TizenOS Package Manager Daemon

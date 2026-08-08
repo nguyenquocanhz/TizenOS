@@ -1,0 +1,12 @@
+Source: archive-mount
+Section: utils
+Priority: optional
+Maintainer: TizenOS Team <team@tizenos.org>
+Build-Depends: debhelper-compat (= 13), cmake, libarchive-dev
+Standards-Version: 4.5.0
+
+Package: archive-mount
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, udisks2
+Description: TizenOS Archive and ISO Mount Engine
+ Provides tools and libraries for archive extraction and ISO loop mounting.

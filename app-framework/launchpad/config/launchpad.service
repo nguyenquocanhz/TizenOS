@@ -1,0 +1,10 @@
+[Unit]
+Description=Tizen Launchpad Daemon
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/launchpad-daemon
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,7 @@
+usr/lib/tizenos/gpu/tizenos-gpu-detect.sh
+usr/lib/tizenos/gpu/tizenos-display-fallback.sh
+usr/lib/systemd/system/tizenos-gpu-detect.service
+usr/lib/systemd/system/tizenos-gpu-monitor.service
+usr/lib/udev/rules.d/90-tizenos-gpu.rules
+etc/X11/xorg.conf.d/10-tizenos-modesetting.conf
+usr/share/doc/tizenos/gpu-management.md

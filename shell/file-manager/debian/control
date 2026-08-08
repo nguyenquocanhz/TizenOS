@@ -1,0 +1,12 @@
+Source: tizenos-files
+Section: x11
+Priority: optional
+Maintainer: TizenOS Team <team@tizenos.org>
+Build-Depends: debhelper-compat (= 13), cmake, libgtk-4-dev, pkg-config
+Standards-Version: 4.5.0
+
+Package: tizenos-files
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, archive-mount
+Description: TizenOS GTK4 File Manager
+ Graphical file manager for TizenOS with archive and virtual drive support.

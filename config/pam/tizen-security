@@ -1,0 +1,4 @@
+# PAM module cho thiết lập context bảo mật Cynara và Smack
+# Được gọi trong session phase để áp đặt giới hạn
+session     required      pam_smack.so
+session     optional      pam_cynara.so

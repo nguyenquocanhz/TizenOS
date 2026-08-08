@@ -1,0 +1,10 @@
+prefix=/usr
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: pkgmgr-client
+Description: TizenOS Package Manager Client Library
+Version: 1.0.0
+Libs: -L${libdir} -lpkgmgr-client
+Cflags: -I${includedir}/pkgmgr-client

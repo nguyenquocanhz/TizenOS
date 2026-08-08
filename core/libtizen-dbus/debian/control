@@ -1,0 +1,18 @@
+Source: libtizen-dbus
+Priority: optional
+Maintainer: TizenOS Team <team@tizenos.org>
+Build-Depends: debhelper (>= 12), cmake, pkg-config, libglib2.0-dev, libtizen-core-dev
+Standards-Version: 4.5.0
+
+Package: libtizen-dbus1
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: TizenOS D-Bus Integration Library
+ Thư viện này cung cấp các tiện ích xử lý D-Bus (GDBus)
+ cho các dịch vụ cốt lõi của TizenOS.
+
+Package: libtizen-dbus-dev
+Architecture: any
+Depends: libtizen-dbus1 (= ${binary:Version}), ${misc:Depends}, libglib2.0-dev, libtizen-core-dev
+Description: Development files for libtizen-dbus
+ Cung cấp header files và pkg-config cho libtizen-dbus.

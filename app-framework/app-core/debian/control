@@ -1,0 +1,12 @@
+Source: capi-appfw-application
+Section: libs
+Priority: optional
+Maintainer: TizenOS Team <team@tizenos.org>
+Build-Depends: debhelper (>= 10), cmake, pkg-config, libglib2.0-dev
+Standards-Version: 4.1.4
+
+Package: capi-appfw-application
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Tizen Application Framework Core
+ Thư viện lõi quản lý vòng đời ứng dụng, app-control và system events.

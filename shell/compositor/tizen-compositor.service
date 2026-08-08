@@ -1,0 +1,10 @@
+[Unit]
+Description=TizenOS Wayland Compositor
+After=systemd-user-sessions.service
+
+[Service]
+ExecStart=/usr/bin/tizen-compositor
+Restart=always
+
+[Install]
+WantedBy=graphical.target

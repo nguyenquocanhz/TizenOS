@@ -1,0 +1,10 @@
+[Unit]
+Description=Tizen App Installer Daemon
+After=dbus.socket
+
+[Service]
+ExecStart=/usr/bin/installer-daemon
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

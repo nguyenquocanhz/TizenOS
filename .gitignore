@@ -1,0 +1,42 @@
+# ==============================================================================
+# TizenOS Core System - Git Ignore Configuration
+# ==============================================================================
+
+# Build Output Directories
+build/output/
+cmake-build-*/
+build/iso_work/
+*.iso
+*.img
+*.deb
+*.udeb
+*.sig
+
+# Compiled Binary Artifacts
+*.o
+*.a
+*.so
+*.so.*
+*.exe
+*.dll
+*.dylib
+
+# CMake Generated Files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+install_manifest.txt
+
+# Editor & OS Artifacts
+.DS_Store
+Thumbs.db
+*.swp
+*.tmp
+*~
+.idea/
+.vscode/
+
+# Local Keypair Artifacts
+*.pem
+!keys/sample-*.pem

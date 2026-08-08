@@ -1,0 +1,5 @@
+tizenos-meta (1.0.0) bookworm; urgency=medium
+
+  * Initial release of TizenOS meta-packages.
+
+ -- TizenOS Team <dev@tizenos.org>  Tue, 08 Aug 2026 00:00:00 +0000

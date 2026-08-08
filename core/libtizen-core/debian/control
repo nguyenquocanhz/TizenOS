@@ -1,0 +1,18 @@
+Source: libtizen-core
+Priority: optional
+Maintainer: TizenOS Team <team@tizenos.org>
+Build-Depends: debhelper (>= 12), cmake, pkg-config, libglib2.0-dev, libsystemd-dev
+Standards-Version: 4.5.0
+
+Package: libtizen-core1
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: TizenOS Core Library
+ Thư viện cốt lõi cung cấp các chức năng cơ bản, xử lý lỗi, logging
+ cho hệ điều hành TizenOS.
+
+Package: libtizen-core-dev
+Architecture: any
+Depends: libtizen-core1 (= ${binary:Version}), ${misc:Depends}, libglib2.0-dev, libsystemd-dev
+Description: Development files for libtizen-core
+ Cung cấp header files và file cấu hình pkg-config cho libtizen-core.

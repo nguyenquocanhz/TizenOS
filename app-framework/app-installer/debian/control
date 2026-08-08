@@ -1,0 +1,12 @@
+Source: app-installer
+Section: admin
+Priority: optional
+Maintainer: TizenOS Team <team@tizenos.org>
+Build-Depends: debhelper (>= 10), cmake, pkg-config, libglib2.0-dev
+Standards-Version: 4.1.4
+
+Package: app-installer
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, dbus
+Description: Tizen Application Installer Daemon
+ Dịch vụ cài đặt TPK, WGT và cầu nối APT deb cho TizenOS.

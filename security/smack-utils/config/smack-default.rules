@@ -1,0 +1,12 @@
+# Cấu hình luật Smack mặc định cho TizenOS
+# Định dạng: Chủ_thể Đối_tượng Quyền (rwxat)
+# r: read, w: write, x: execute, a: append, t: transmute
+
+# Cho phép System truy cập mọi thứ của App
+System App rwxat
+# App chỉ được quyền đọc tài nguyên System
+App System r
+# User có thể tương tác với App
+User App rw
+# App có thể đọc/ghi thư mục của User
+App User rw

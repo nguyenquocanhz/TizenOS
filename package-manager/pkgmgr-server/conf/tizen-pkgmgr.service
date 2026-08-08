@@ -1,0 +1,11 @@
+[Unit]
+Description=TizenOS Package Manager Daemon
+After=dbus.service
+
+[Service]
+ExecStart=/usr/sbin/tizen-pkgmgrd
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target

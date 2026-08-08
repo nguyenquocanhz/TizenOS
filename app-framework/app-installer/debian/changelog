@@ -1,0 +1,5 @@
+app-installer (1.0.0-1) unstable; urgency=medium
+
+  * Phát hành ban đầu dịch vụ cài đặt TizenOS.
+
+ -- TizenOS Team <team@tizenos.org>  Thu, 01 Jan 2026 00:00:00 +0000

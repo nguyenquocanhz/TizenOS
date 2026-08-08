@@ -1,0 +1,6 @@
+libtizen-dbus (1.0.0-1) unstable; urgency=medium
+
+  * Phiên bản ban đầu với hỗ trợ GDBus tích hợp core system.
+  * Hỗ trợ phát signal và đăng ký method.
+
+ -- TizenOS Team <team@tizenos.org>  Sun, 09 Aug 2026 01:49:00 +0700

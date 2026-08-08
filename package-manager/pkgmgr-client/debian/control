@@ -1,0 +1,10 @@
+Source: pkgmgr-client
+Section: admin
+Priority: optional
+Maintainer: TizenOS <admin@tizenos.org>
+Build-Depends: debhelper (>= 11), cmake, libglib2.0-dev
+
+Package: pkgmgr-client
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: TizenOS Package Manager CLI & Library

@@ -1,0 +1,11 @@
+Source: smack-utils
+Maintainer: TizenOS Security Team <security@tizen.org>
+Section: admin
+Priority: optional
+Build-Depends: debhelper-compat (= 13), cmake
+
+Package: smack-utils
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: TizenOS Smack Utilities
+ Công cụ quản lý luật Smack MAC cho TizenOS.
