@@ -24,7 +24,7 @@ mkdir -p "$WORK_DIR/boot/grub"
 # 1. Nếu chưa có filesystem.squashfs, tiến hành debootstrap & mksquashfs
 if [ ! -f "$WORK_DIR/live/filesystem.squashfs" ] || [ ! -s "$WORK_DIR/live/filesystem.squashfs" ]; then
     echo "======================================================================"
-    echo " [1/3] Khởi tạo Debian 12 RootFS bằng debootstrap (yêu cầu root)..."
+    echo " [1/3] Khởi tạo Debian 12 RootFS bằng debootstrap..."
     echo "======================================================================"
     if [ ! -d "$ROOTFS_DIR" ] || [ ! -f "$ROOTFS_DIR/etc/debian_version" ]; then
         chmod +x build/scripts/bootstrap.sh 2>/dev/null || true
@@ -36,11 +36,20 @@ if [ ! -f "$WORK_DIR/live/filesystem.squashfs" ] || [ ! -s "$WORK_DIR/live/files
     fi
 
     if [ -d "$ROOTFS_DIR" ]; then
-        echo "Đang nén RootFS thành filesystem.squashfs..."
+        echo "Dọn dẹp virtual mounts trước khi nén squashfs..."
         if [ "$(id -u)" -ne 0 ]; then
-            sudo mksquashfs "$ROOTFS_DIR" "$WORK_DIR/live/filesystem.squashfs" -comp zstd -noappend || sudo mksquashfs "$ROOTFS_DIR" "$WORK_DIR/live/filesystem.squashfs" -noappend
+            sudo umount -l "$ROOTFS_DIR/dev/pts" "$ROOTFS_DIR/sys" "$ROOTFS_DIR/proc" "$ROOTFS_DIR/dev" 2>/dev/null || true
         else
-            mksquashfs "$ROOTFS_DIR" "$WORK_DIR/live/filesystem.squashfs" -comp zstd -noappend || mksquashfs "$ROOTFS_DIR" "$WORK_DIR/live/filesystem.squashfs" -noappend
+            umount -l "$ROOTFS_DIR/dev/pts" "$ROOTFS_DIR/sys" "$ROOTFS_DIR/proc" "$ROOTFS_DIR/dev" 2>/dev/null || true
+        fi
+
+        echo "Đang nén RootFS thành filesystem.squashfs (bỏ qua proc/sys/dev)..."
+        if [ "$(id -u)" -ne 0 ]; then
+            sudo mksquashfs "$ROOTFS_DIR" "$WORK_DIR/live/filesystem.squashfs" -comp zstd -noappend -e proc sys dev || \
+            sudo mksquashfs "$ROOTFS_DIR" "$WORK_DIR/live/filesystem.squashfs" -noappend -e proc sys dev
+        else
+            mksquashfs "$ROOTFS_DIR" "$WORK_DIR/live/filesystem.squashfs" -comp zstd -noappend -e proc sys dev || \
+            mksquashfs "$ROOTFS_DIR" "$WORK_DIR/live/filesystem.squashfs" -noappend -e proc sys dev
         fi
 
         # Copy vmlinuz và initrd.img thực tế từ rootfs
@@ -152,5 +161,5 @@ xorriso -as mkisofs "${XORRISO_ARGS[@]}" -o "$OUTPUT_ISO" "$WORK_DIR" || {
 SIZE=$(du -h "$OUTPUT_ISO" 2>/dev/null | cut -f1 || echo "unknown")
 echo "======================================================================"
 echo " ✓ ĐÃ TẠO THÀNH CÔNG ĐĨA HYBRID LIVE ISO (Dung lượng: $SIZE)!"
-echo " Tệp ISO đã được xuất ra tại: $OUTPUT_ISO"
+echo " Tệp ISO đã me xuất ra tại: $OUTPUT_ISO"
 echo "======================================================================"

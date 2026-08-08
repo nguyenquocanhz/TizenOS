@@ -3,7 +3,7 @@
 # TizenOS Master Debootstrap Script for Debian 12 (Bookworm)
 # ==============================================================================
 # Khởi tạo rootfs Debian 12, nạp kernel linux-image-amd64, systemd, live-boot,
-# và các công cụ bootloader UEFI/MBR.
+# và các công cụ bootloader UEFI/MBR chuẩn.
 # ==============================================================================
 
 set -euo pipefail
@@ -42,7 +42,7 @@ export DEBIAN_FRONTEND=noninteractive
 
 echo "TizenOS" > /etc/hostname
 
-# Cài đặt Kernel 6.1 LTS và Bootloaders cho Dual Boot (UEFI/MBR)
+# Cài đặt Kernel 6.1 LTS và Bootloaders tiêu chuẩn (UEFI/MBR)
 apt-get update -qq || true
 apt-get install -y --no-install-recommends \
     linux-image-amd64 \
@@ -71,10 +71,11 @@ chmod +x "$ROOTFS_DIR/bootstrap_in_chroot.sh"
 chroot "$ROOTFS_DIR" /bootstrap_in_chroot.sh || true
 rm -f "$ROOTFS_DIR/bootstrap_in_chroot.sh"
 
-umount "$ROOTFS_DIR/dev/pts" 2>/dev/null || true
-umount "$ROOTFS_DIR/sys" 2>/dev/null || true
-umount "$ROOTFS_DIR/proc" 2>/dev/null || true
-umount "$ROOTFS_DIR/dev" 2>/dev/null || true
+# Dọn dẹp mount points bắt buộc
+umount -l "$ROOTFS_DIR/dev/pts" 2>/dev/null || true
+umount -l "$ROOTFS_DIR/sys" 2>/dev/null || true
+umount -l "$ROOTFS_DIR/proc" 2>/dev/null || true
+umount -l "$ROOTFS_DIR/dev" 2>/dev/null || true
 
 echo "======================================================================"
 echo " ✓ Debootstrap hoàn tất cấu hình base RootFS!"
