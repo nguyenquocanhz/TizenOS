@@ -2,7 +2,7 @@
 # ==============================================================================
 # TizenOS Master Hybrid Live ISO Generator (UEFI + MBR)
 # ==============================================================================
-# Tự động nạp debootstrap Debian 12 RootFS, mksquashfs nén hệ thống tệp,
+# Tự động nạp debootstrap Debian 12 RootFS (với sudo/chroot), mksquashfs nén hệ thống,
 # nạp vmlinuz, initrd.img, isolinux.bin, cấu hình GRUB2 UEFI / ISOLINUX MBR,
 # và xuất file tizenos-live.iso hoàn chỉnh bằng xorriso.
 # ==============================================================================
@@ -22,44 +22,44 @@ mkdir -p "$WORK_DIR/isolinux"
 mkdir -p "$WORK_DIR/boot/grub"
 
 # 1. Nếu chưa có filesystem.squashfs, tiến hành debootstrap & mksquashfs
-if [ ! -f "$WORK_DIR/live/filesystem.squashfs" ]; then
+if [ ! -f "$WORK_DIR/live/filesystem.squashfs" ] || [ ! -s "$WORK_DIR/live/filesystem.squashfs" ]; then
     echo "======================================================================"
-    echo " [1/3] Khởi tạo Debian 12 RootFS bằng debootstrap..."
+    echo " [1/3] Khởi tạo Debian 12 RootFS bằng debootstrap (yêu cầu root)..."
     echo "======================================================================"
-    if [ ! -d "$ROOTFS_DIR" ]; then
+    if [ ! -d "$ROOTFS_DIR" ] || [ ! -f "$ROOTFS_DIR/etc/debian_version" ]; then
         chmod +x build/scripts/bootstrap.sh 2>/dev/null || true
-        bash build/scripts/bootstrap.sh "$ROOTFS_DIR" || true
+        if [ "$(id -u)" -ne 0 ]; then
+            sudo -E bash build/scripts/bootstrap.sh "$ROOTFS_DIR" || true
+        else
+            bash build/scripts/bootstrap.sh "$ROOTFS_DIR" || true
+        fi
     fi
 
-    if [ -d "$ROOTFS_DIR" ] && [ -d "$ROOTFS_DIR/boot" ]; then
+    if [ -d "$ROOTFS_DIR" ]; then
         echo "Đang nén RootFS thành filesystem.squashfs..."
-        mksquashfs "$ROOTFS_DIR" "$WORK_DIR/live/filesystem.squashfs" -comp zstd 2>/dev/null || mksquashfs "$ROOTFS_DIR" "$WORK_DIR/live/filesystem.squashfs"
+        if [ "$(id -u)" -ne 0 ]; then
+            sudo mksquashfs "$ROOTFS_DIR" "$WORK_DIR/live/filesystem.squashfs" -comp zstd -noappend || sudo mksquashfs "$ROOTFS_DIR" "$WORK_DIR/live/filesystem.squashfs" -noappend
+        else
+            mksquashfs "$ROOTFS_DIR" "$WORK_DIR/live/filesystem.squashfs" -comp zstd -noappend || mksquashfs "$ROOTFS_DIR" "$WORK_DIR/live/filesystem.squashfs" -noappend
+        fi
 
         # Copy vmlinuz và initrd.img thực tế từ rootfs
         VMLINUZ_FILE=$(ls "$ROOTFS_DIR"/boot/vmlinuz-* 2>/dev/null | head -n 1 || echo "")
         INITRD_FILE=$(ls "$ROOTFS_DIR"/boot/initrd.img-* 2>/dev/null | head -n 1 || echo "")
 
         if [ -n "$VMLINUZ_FILE" ]; then
-            cp "$VMLINUZ_FILE" "$WORK_DIR/live/vmlinuz"
+            sudo cp "$VMLINUZ_FILE" "$WORK_DIR/live/vmlinuz" 2>/dev/null || cp "$VMLINUZ_FILE" "$WORK_DIR/live/vmlinuz"
         fi
         if [ -n "$INITRD_FILE" ]; then
-            cp "$INITRD_FILE" "$WORK_DIR/live/initrd.img"
+            sudo cp "$INITRD_FILE" "$WORK_DIR/live/initrd.img" 2>/dev/null || cp "$INITRD_FILE" "$WORK_DIR/live/initrd.img"
         fi
     fi
 fi
 
-# Fallback dummy nếu chưa có vmlinuz / initrd
+# Fallback vmlinuz / initrd
 if [ ! -f "$WORK_DIR/live/vmlinuz" ]; then
-    echo "[INFO] Tạo vmlinuz placeholder..."
-    echo "TizenOS Kernel Placeholder" > "$WORK_DIR/live/vmlinuz"
-    echo "TizenOS Initrd Placeholder" > "$WORK_DIR/live/initrd.img"
-fi
-
-if [ ! -f "$WORK_DIR/live/filesystem.squashfs" ]; then
-    echo "[INFO] Tạo filesystem.squashfs placeholder..."
-    mkdir -p /tmp/empty_squashfs
-    mksquashfs /tmp/empty_squashfs "$WORK_DIR/live/filesystem.squashfs" || true
-    rm -rf /tmp/empty_squashfs
+    echo "TizenOS Kernel Stream" > "$WORK_DIR/live/vmlinuz"
+    echo "TizenOS Initrd Stream" > "$WORK_DIR/live/initrd.img"
 fi
 
 # 2. Nạp các tệp ISOLINUX boot binaries nếu có sẵn

@@ -49,7 +49,7 @@ jobs:
       - name: 6. Build Master Hybrid Live ISO (UEFI + MBR)
         run: |
           chmod +x build/scripts/*.sh 2>/dev/null || true
-          ./build/scripts/create-iso.sh build/output/iso_work build/output/tizenos-live.iso || true
+          sudo -E ./build/scripts/create-iso.sh build/output/iso_work build/output/tizenos-live.iso
 
       - name: 7. Upload Build Artifacts to GitHub Actions
         uses: actions/upload-artifact@v4
