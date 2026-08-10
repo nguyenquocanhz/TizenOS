@@ -54,4 +54,30 @@ TizenOS được xây dựng từ 8 Phase kiến trúc C/C++ chuẩn mực:
 | **Tốc độ Mở App** | Trung bình (Đọc đĩa trực tiếp) | Nhanh | **Cực nhanh nhờ Tiến trình Pre-fork Pool (`launchpad`)** |
 | **Hỗ trợ Card NVIDIA** | Thường bị xé hình / lỗi Wayland | Không hỗ trợ | **Tự động cấu hình GBM / DRM Modeset hoặc tự chuyển X11 Session C** |
 | **Bảo vệ Tính toàn vẹn** | Checksum cơ bản | Chữ ký Tizen | **Kiểm định 3 cấp: SHA256/512, GPG Signatures, & Công cụ `signFile` (Ed25519/RSA/ECDSA)** |
-| **Bộ Cài đặt (Installer)** | Calamares / Ubiquity | Không có bản PC | **`tizenos-installer` GTK4 7-Step (`rsync -aHAX` bảo toàn Smack xattr & LUKS)** |
+| **Bộ Cài đặt (Installer)** | Calamares / Ubiquity | Không có bản PC | **Calamares Universal Installer + `tizenos-installer` GTK4 7-Step (`rsync -aHAX` bảo toàn Smack xattr)** |
+
+---
+
+## 📖 4. Hướng Dẫn Tùy Biến (Customize), Cài Thêm Apps & Tham Gia Phát Triển
+
+Bạn muốn tự build đĩa ISO cho riêng mình, cài thêm các ứng dụng mặc định (VS Code, Telegram, Steam...), tùy biến giao diện hoặc tham gia đóng góp cho TizenOS?
+
+👉 **Xem ngay Hướng Dẫn Chi Tiết tại**: [**`CUSTOMIZATION_GUIDE.md`**](CUSTOMIZATION_GUIDE.md)
+
+---
+
+### 🔨 Lệnh Build Nhanh (Quick Build Commands):
+
+```bash
+# 1. Clone repository
+git clone https://github.com/nguyenquocanhz/TizenOS.git
+cd TizenOS
+
+# 2. Khởi tạo Debian 12 Base RootFS & Calamares Installer
+sudo bash build/scripts/bootstrap.sh
+
+# 3. Đóng gói đĩa Hybrid Live ISO (tizenos-live.iso)
+sudo bash build/scripts/create-iso.sh
+```
+
+Tệp ISO sẽ được xuất ra tại `build/output/tizenos-live.iso` sẵn sàng thử nghiệm trên VMware/VirtualBox hoặc máy thật!
