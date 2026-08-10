@@ -1,0 +1,5 @@
+1) Copy the theme folder --> /usr/share/plymouth/themes/.
+2) sudo update-alternatives --install /usr/share/plymouth/themes/default.plymouth default.plymouth /usr/share/plymouth/themes/FEDORA-9-BOOT-SPLASH-PORT_V2.0_PLYMOUTH-THEME/FEDORA-9-BOOT-SPLASH-PORT_V2.0_PLYMOUTH-THEME.plymouth 606
+3) sudo update-alternatives --config default.plymouth
+4) Select the desired item with the theme.
+5) sudo update-initramfs -u

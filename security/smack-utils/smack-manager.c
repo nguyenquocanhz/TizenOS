@@ -5,6 +5,35 @@
 #include <unistd.h>
 #include "smack-util.h"
 
+/* === Samsung Tizen 10.0 Best Practice: Conditional Smack Loading === */
+/* Kiểm tra Smack LSM availability trước khi ghi rules */
+static int smack_is_available(void) {
+    /* Phương pháp 1: Kiểm tra smackfs mounted */
+    if (access("/sys/fs/smackfs/load", W_OK) != 0) {
+        fprintf(stderr, "[SMACK] WARNING: /sys/fs/smackfs/load not accessible.\n");
+        fprintf(stderr, "[SMACK] Smack LSM not enabled in kernel. Skipping rule loading.\n");
+        fprintf(stderr, "[SMACK] To enable: compile kernel with CONFIG_SECURITY_SMACK=y\n");
+        fprintf(stderr, "[SMACK] and add lsm=smack,capability to kernel cmdline.\n");
+        return 0;
+    }
+    /* Phương pháp 2: Kiểm tra LSM list */
+    FILE *f = fopen("/sys/kernel/security/lsm", "r");
+    if (f) {
+        char buf[256];
+        if (fgets(buf, sizeof(buf), f)) {
+            fclose(f);
+            if (strstr(buf, "smack") == NULL) {
+                fprintf(stderr, "[SMACK] WARNING: Smack not in active LSM list: %s", buf);
+                fprintf(stderr, "[SMACK] Skipping Smack rule loading (no-smack mode).\n");
+                return 0;
+            }
+            return 1; /* Smack available */
+        }
+        fclose(f);
+    }
+    return 0;
+}
+
 // Ghi rules trực tiếp vào /sys/fs/smackfs/load để nạp luật Smack
 #define SMACK_LOAD_PATH "/sys/fs/smackfs/load"
 
@@ -41,6 +70,10 @@ int load_smack_rules(const char *rule_file) {
 }
 
 int main(int argc, char **argv) {
+    if (!smack_is_available()) {
+        printf("[SMACK] Running in no-smack mode (Tizen 10.0 compatible).\n");
+        return 0; /* Exit gracefully instead of crashing */
+    }
     // Nạp file cấu hình luật mặc định
     if (argc > 1) {
         load_smack_rules(argv[1]);

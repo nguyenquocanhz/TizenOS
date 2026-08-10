@@ -1,0 +1,16 @@
+1) Copy the theme folder --> /usr/share/plymouth/themes/.
+2) sudo plymouth-set-default-theme FEDORA-9-BOOT-SPLASH-PORT_V2.0_PLYMOUTH-THEME -R
+
+      or
+
+1) Copy the theme folder --> /usr/share/plymouth/themes/.
+2) sudo nano /usr/share/plymouth/plymouthd.defaults
+3) Replace the name in the "Theme=" section with the name of the selected theme.
+4) sudo update-initramfs -u
+
+EXAMPLE:
+
+[Daemon]
+Theme=FEDORA-9-BOOT-SPLASH-PORT_V2.0_PLYMOUTH-THEME
+ShowDelay=0
+DeviceTimeout=3

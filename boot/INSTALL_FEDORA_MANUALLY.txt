@@ -1,0 +1,2 @@
+1) Copy the theme folder --> /usr/share/plymouth/themes/.
+2) sudo plymouth-set-default-theme FEDORA-9-BOOT-SPLASH-PORT_V2.0_PLYMOUTH-THEME -R -l

@@ -2,6 +2,7 @@
 Description=TizenOS Smack Initialization Service
 Before=sysinit.target
 DefaultDependencies=no
+ConditionPathExists=/sys/fs/smackfs
 
 [Service]
 Type=oneshot

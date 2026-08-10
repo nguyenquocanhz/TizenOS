@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=FEDORA-9-BOOT-SPLASH-PORT_V2.0_PLYMOUTH-THEME
+Description=Port of the original Fedora 9 boot splash for Plymouth
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/FEDORA-9-BOOT-SPLASH-PORT_V2.0_PLYMOUTH-THEME
+ScriptFile=/usr/share/plymouth/themes/FEDORA-9-BOOT-SPLASH-PORT_V2.0_PLYMOUTH-THEME/FEDORA-9-BOOT-SPLASH-PORT_V2.0_PLYMOUTH-THEME.script

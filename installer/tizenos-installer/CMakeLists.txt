@@ -20,5 +20,9 @@ add_executable(tizenos-installer ${SOURCES})
 target_include_directories(tizenos-installer PRIVATE ${GTK4_INCLUDE_DIRS})
 target_link_libraries(tizenos-installer PRIVATE ${GTK4_LIBRARIES} crypt)
 
-install(TARGETS tizenos-installer DESTINATION bin)
+add_executable(tizenos-welcome src/boot-welcome.c)
+target_include_directories(tizenos-welcome PRIVATE ${GTK4_INCLUDE_DIRS})
+target_link_libraries(tizenos-welcome PRIVATE ${GTK4_LIBRARIES})
+
+install(TARGETS tizenos-installer tizenos-welcome DESTINATION bin)
 install(FILES tizenos-installer.desktop DESTINATION share/applications)

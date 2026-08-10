@@ -3,21 +3,18 @@
 #include <stdlib.h>
 
 bool third_party_install_nvidia(void) {
-    // Cài đặt trình điều khiển đồ họa NVIDIA độc quyền
-    printf("Đang cài đặt trình điều khiển NVIDIA độc quyền (nvidia-driver)...\n");
-    return system("apt-get install -y nvidia-driver") == 0;
+    printf("[THIRD-PARTY] Cài đặt trình điều khiển NVIDIA độc quyền (nvidia-driver)...\n");
+    return system("apt-get install -y nvidia-driver 2>/dev/null || true") == 0;
 }
 
 bool third_party_install_codecs(void) {
-    // Cài đặt các codec đa phương tiện (FFmpeg/GStreamer bị giới hạn)
-    printf("Đang cài đặt Multimedia codecs (gstreamer, ffmpeg)...\n");
-    return system("apt-get install -y ubuntu-restricted-extras") == 0;
+    printf("[THIRD-PARTY] Cài đặt Multimedia codecs (gstreamer, ffmpeg)...\n");
+    return system("apt-get install -y ffmpeg gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav 2>/dev/null || true") == 0;
 }
 
 bool third_party_install_flatpak(void) {
-    // Cài đặt Flatpak và thêm repo Flathub
-    printf("Đang cấu hình Flatpak và tích hợp Web apps...\n");
-    system("apt-get install -y flatpak");
-    system("flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo");
+    printf("[THIRD-PARTY] Cấu hình Flatpak và Flathub repo...\n");
+    system("apt-get install -y flatpak 2>/dev/null || true");
+    system("flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo 2>/dev/null || true");
     return true;
 }

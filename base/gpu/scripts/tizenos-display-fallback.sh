@@ -174,6 +174,22 @@ XINITRC
 # ---- Decision Engine ---------------------------------------------------------
 
 make_display_decision() {
+    # === Samsung Tizen-style: Early VM Detection ===
+    # Phát hiện VM ngay đầu và skip Wayland nếu không có 3D accel
+    if [ -f "$GPU_INFO" ]; then
+        # shellcheck source=/dev/null
+        source "$GPU_INFO" 2>/dev/null || true
+        if [ "${GPU_IS_VIRTUAL:-no}" = "yes" ]; then
+            # Kiểm tra 3D acceleration thực tế qua render node
+            if [ ! -e /dev/dri/renderD128 ]; then
+                log_warn "Virtual GPU KHÔNG có 3D acceleration → X11 trực tiếp"
+                log_warn "Bật 3D acceleration trong VMware/VirtualBox settings để dùng Wayland"
+                launch_x11 "" "Virtual GPU without 3D acceleration (no /dev/dri/renderD128)"
+                return
+            fi
+        fi
+    fi
+
     # Nguồn dữ liệu GPU
     if [ ! -f "$GPU_INFO" ]; then
         log_error "Không tìm thấy $GPU_INFO — chạy tizenos-gpu-detect trước!"

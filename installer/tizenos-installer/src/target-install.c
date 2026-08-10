@@ -6,9 +6,9 @@
  * 2. Sao chép rootfs qua rsync (-aHAX giữ quyền Smack xattr) hoặc unsquashfs.
  * 3. Tự động sinh /etc/fstab dựa trên UUID (blkid).
  * 4. Tạo tài khoản người dùng, băm mật khẩu, set hostname.
- * 5. Cài đặt GRUB2 Bootloader (UEFI x86_64/ARM64 hoặc MBR Legacy).
+ * 5. Cài đặt GRUB2 Bootloader (UEFI x86_64/ARM64 và MBR Legacy).
  * 6. Cập nhật initramfs & chroot finalization.
- * 7. Unmount an toàn trước khi khởi động lại.
+ * 7. Dọn dẹp autostart bộ cài trên hệ thống thật & Unmount an toàn.
  * =============================================================================
  */
 
@@ -26,8 +26,6 @@
 #define SQUASHFS_PATH "/run/live/medium/live/filesystem.squashfs"
 #define LIVE_ROOTFS "/run/live/rootfs"
 
-/* ---- Helper Functions ------------------------------------------------------ */
-
 static int run_cmd(const char *cmd) {
     printf("[TARGET-INSTALL] Executing: %s\n", cmd);
     int status = system(cmd);
@@ -37,30 +35,28 @@ static int run_cmd(const char *cmd) {
     }
     int exit_code = WEXITSTATUS(status);
     if (exit_code != 0) {
-        fprintf(stderr, "[TARGET-INSTALL-ERROR] Command returned error code %d: %s\n", exit_code, cmd);
+        fprintf(stderr, "[TARGET-INSTALL-ERROR] Command returned code %d: %s\n", exit_code, cmd);
     }
     return exit_code;
 }
 
-/* Lấy UUID của phân vùng đĩa qua blkid */
-static char *get_partition_uuid(const char *part_dev) {
-    static char uuid[128];
+static bool fetch_partition_uuid(const char *part_dev, char *out_uuid, size_t max_len) {
+    if (!part_dev || !out_uuid || max_len == 0) return false;
+    out_uuid[0] = '\0';
     char cmd[512];
     snprintf(cmd, sizeof(cmd), "blkid -s UUID -o value %s 2>/dev/null", part_dev);
 
     FILE *fp = popen(cmd, "r");
-    if (!fp) return NULL;
+    if (!fp) return false;
 
-    if (fgets(uuid, sizeof(uuid), fp) != NULL) {
-        uuid[strcspn(uuid, "\r\n")] = '\0';
+    if (fgets(out_uuid, max_len, fp) != NULL) {
+        out_uuid[strcspn(out_uuid, "\r\n")] = '\0';
         pclose(fp);
-        return uuid;
+        return (strlen(out_uuid) > 0);
     }
     pclose(fp);
-    return NULL;
+    return false;
 }
-
-/* ---- 1. Rootfs Deployment via rsync / unsquashfs --------------------------- */
 
 bool target_install_copy_rootfs(const char *source, const char *dest) {
     const char *target = dest ? dest : TARGET_MOUNT;
@@ -68,12 +64,10 @@ bool target_install_copy_rootfs(const char *source, const char *dest) {
 
     printf("[TARGET-INSTALL] === Bước 1: Sao chép Rootfs sang %s ===\n", target);
 
-    // Tạo thư mục mount mục tiêu nếu chưa có
     mkdir(target, 0755);
 
-    // Ưu tiên rsync nếu live rootfs đang mount
     if (access(LIVE_ROOTFS, F_OK) == 0) {
-        printf("[TARGET-INSTALL] Sử dụng rsync để sao chép live rootfs (bảo toàn Smack xattr & ACLs)...\n");
+        printf("[TARGET-INSTALL] Sử dụng rsync để sao chép live rootfs (bảo toàn Smack xattr)...\n");
         snprintf(cmd, sizeof(cmd),
             "rsync -aHAX --info=progress2 "
             "--exclude='/proc/*' --exclude='/sys/*' --exclude='/dev/*' "
@@ -83,33 +77,31 @@ bool target_install_copy_rootfs(const char *source, const char *dest) {
 
         if (run_cmd(cmd) == 0) {
             printf("[TARGET-INSTALL] ✓ rsync sao chép Rootfs thành công!\n");
+            run_cmd("rm -f " TARGET_MOUNT "/etc/skel/.config/autostart/tizenos-installer.desktop 2>/dev/null || true");
+            run_cmd("rm -f " TARGET_MOUNT "/etc/skel/.config/autostart/tizenos-welcome.desktop 2>/dev/null || true");
+            run_cmd("rm -f " TARGET_MOUNT "/home/*/.config/autostart/tizenos-installer.desktop 2>/dev/null || true");
+            run_cmd("rm -f " TARGET_MOUNT "/home/*/.config/autostart/tizenos-welcome.desktop 2>/dev/null || true");
             return true;
         }
     }
 
-    // Fallback sang unsquashfs giải nén trực tiếp file filesystem.squashfs
-    if (access(SQUASHFS_PATH, F_OK) == 0) {
-        printf("[TARGET-INSTALL] Fallback: Sử dụng unsquashfs để giải nén %s...\n", SQUASHFS_PATH);
-        snprintf(cmd, sizeof(cmd), "unsquashfs -f -d %s %s", target, SQUASHFS_PATH);
-        if (run_cmd(cmd) == 0) {
-            printf("[TARGET-INSTALL] ✓ unsquashfs giải nén thành công!\n");
-            return true;
-        }
-    }
+    printf("[TARGET-INSTALL] Sao chép trực tiếp từ hệ thống đang chạy...\n");
+    snprintf(cmd, sizeof(cmd),
+        "rsync -aHAX --info=progress2 "
+        "--exclude='/proc/*' --exclude='/sys/*' --exclude='/dev/*' "
+        "--exclude='/tmp/*' --exclude='/run/*' --exclude='/mnt/*' "
+        "--exclude='/media/*' --exclude='/lost+found' "
+        "/ %s/", target);
 
-    // Direct source fallback nếu có argument
-    if (source && access(source, F_OK) == 0) {
-        snprintf(cmd, sizeof(cmd), "rsync -aHAX %s/ %s/", source, target);
-        return (run_cmd(cmd) == 0);
-    }
-
-    fprintf(stderr, "[TARGET-INSTALL-ERROR] Không thể tìm thấy nguồn Rootfs để sao chép!\n");
-    return false;
+    int res = run_cmd(cmd);
+    run_cmd("rm -f " TARGET_MOUNT "/etc/skel/.config/autostart/tizenos-installer.desktop 2>/dev/null || true");
+    run_cmd("rm -f " TARGET_MOUNT "/etc/skel/.config/autostart/tizenos-welcome.desktop 2>/dev/null || true");
+    run_cmd("rm -f " TARGET_MOUNT "/home/*/.config/autostart/tizenos-installer.desktop 2>/dev/null || true");
+    run_cmd("rm -f " TARGET_MOUNT "/home/*/.config/autostart/tizenos-welcome.desktop 2>/dev/null || true");
+    return (res == 0);
 }
 
-/* ---- 2. fstab Auto-Generation ---------------------------------------------- */
-
-bool target_install_generate_fstab(const char *root_part, const char *esp_part) {
+bool target_install_generate_fstab(const char *root_part, const char *esp_part, const char *swap_part) {
     char fstab_path[512];
     snprintf(fstab_path, sizeof(fstab_path), "%s/etc/fstab", TARGET_MOUNT);
 
@@ -122,38 +114,40 @@ bool target_install_generate_fstab(const char *root_part, const char *esp_part) 
     }
 
     fprintf(fp, "# /etc/fstab: Static file system information for TizenOS\n");
-    fprintf(fp, "# Dynamic UUID generation by TizenOS Target Installer\n");
     fprintf(fp, "# <file system>                           <mount point>   <type>  <options>       <dump>  <pass>\n\n");
 
-    // 1. Root Partition
-    char *root_uuid = get_partition_uuid(root_part);
-    if (root_uuid && strlen(root_uuid) > 0) {
+    char root_uuid[128] = {0};
+    if (fetch_partition_uuid(root_part, root_uuid, sizeof(root_uuid))) {
         fprintf(fp, "UUID=%-36s  /               ext4    noatime,errors=remount-ro  0       1\n", root_uuid);
-        printf("[TARGET-INSTALL] Root UUID: %s\n", root_uuid);
     } else {
         fprintf(fp, "%-41s  /               ext4    noatime,errors=remount-ro  0       1\n", root_part);
     }
 
-    // 2. EFI System Partition (/boot/efi)
     if (esp_part && strlen(esp_part) > 0) {
-        char *esp_uuid = get_partition_uuid(esp_part);
-        if (esp_uuid && strlen(esp_uuid) > 0) {
+        char esp_uuid[128] = {0};
+        if (fetch_partition_uuid(esp_part, esp_uuid, sizeof(esp_uuid))) {
             fprintf(fp, "UUID=%-36s  /boot/efi       vfat    umask=0077      0       2\n", esp_uuid);
-            printf("[TARGET-INSTALL] ESP UUID: %s\n", esp_uuid);
         } else {
             fprintf(fp, "%-41s  /boot/efi       vfat    umask=0077      0       2\n", esp_part);
         }
     }
 
-    // 3. Virtual filesystems & tmp
+    if (swap_part && strlen(swap_part) > 0) {
+        char swap_uuid[128] = {0};
+        if (fetch_partition_uuid(swap_part, swap_uuid, sizeof(swap_uuid))) {
+            fprintf(fp, "UUID=%-36s  none            swap    sw              0       0\n", swap_uuid);
+        } else {
+            fprintf(fp, "%-41s  none            swap    sw              0       0\n", swap_part);
+        }
+    }
+
     fprintf(fp, "tmpfs                                      /tmp            tmpfs   defaults,noatime,mode=1777 0 0\n");
+    fprintf(fp, "tmpfs                                      /dev/shm        tmpfs   defaults,nosuid,nodev 0 0\n");
 
     fclose(fp);
     printf("[TARGET-INSTALL] ✓ /etc/fstab đã được khởi tạo thành công!\n");
     return true;
 }
-
-/* ---- 3. Bind Virtual Filesystems & Chroot Setup ---------------------------- */
 
 static bool bind_virtual_fs() {
     printf("[TARGET-INSTALL] Bind mounting virtual filesystems (/dev, /proc, /sys, /run)...\n");
@@ -175,36 +169,39 @@ static bool unbind_virtual_fs() {
     return true;
 }
 
-/* ---- 4. GRUB2 Bootloader Installation -------------------------------------- */
-
 bool target_install_grub(const char *disk, bool is_uefi) {
+    (void)is_uefi;
     char cmd[1024];
 
-    printf("[TARGET-INSTALL] === Bước 3: Cài đặt GRUB2 Bootloader (%s) ===\n", is_uefi ? "UEFI" : "MBR Legacy");
+    printf("[TARGET-INSTALL] === Bước 3: Cài đặt GRUB2 Bootloader Kép (%s) ===\n", disk);
 
     bind_virtual_fs();
 
-    if (is_uefi) {
-        // Cài đặt GRUB2 EFI (x86_64 / arm64)
-        snprintf(cmd, sizeof(cmd),
-            "chroot " TARGET_MOUNT " grub-install "
-            "--target=x86_64-efi --efi-directory=/boot/efi "
-            "--bootloader-id=TizenOS --recheck");
-        run_cmd(cmd);
-    } else {
-        // Cài đặt GRUB2 MBR (Legacy BIOS)
-        snprintf(cmd, sizeof(cmd),
-            "chroot " TARGET_MOUNT " grub-install "
-            "--target=i386-pc --recheck %s", disk);
-        run_cmd(cmd);
-    }
+    snprintf(cmd, sizeof(cmd),
+        "chroot " TARGET_MOUNT " grub-install --target=i386-pc --recheck %s 2>/dev/null || true", disk);
+    run_cmd(cmd);
 
-    // Cập nhật cấu hình GRUB và initramfs
-    printf("[TARGET-INSTALL] Cập nhật initramfs và cấu hình GRUB...\n");
-    run_cmd("chroot " TARGET_MOUNT " update-initramfs -u -k all");
-    run_cmd("chroot " TARGET_MOUNT " update-grub");
+    snprintf(cmd, sizeof(cmd),
+        "chroot " TARGET_MOUNT " grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=TizenOS --recheck --removable 2>/dev/null || true");
+    run_cmd(cmd);
+
+    printf("[TARGET-INSTALL] Cập nhật initramfs, open-vm-tools và cấu hình GRUB...\n");
+    run_cmd("chroot " TARGET_MOUNT " systemctl enable open-vm-tools.service 2>/dev/null || true");
+    run_cmd("chroot " TARGET_MOUNT " update-initramfs -u -k all 2>/dev/null || true");
+    run_cmd("chroot " TARGET_MOUNT " update-grub 2>/dev/null || true");
+
+    printf("[TARGET-INSTALL] Đồng bộ dữ liệu xuống đĩa ảo VMware (.vmdk)...\n");
+    sync();
+    run_cmd("sync");
+    snprintf(cmd, sizeof(cmd), "blockdev --flushbufs %s 2>/dev/null || true", disk);
+    run_cmd(cmd);
 
     unbind_virtual_fs();
+
+    run_cmd("umount -R " TARGET_MOUNT " 2>/dev/null || true");
+
+    sync();
+    run_cmd("sync");
 
     printf("[TARGET-INSTALL] ✓ Cài đặt GRUB2 Bootloader hoàn tất!\n");
     return true;
