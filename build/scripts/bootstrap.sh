@@ -69,7 +69,7 @@ apt-get install -y --no-install-recommends \
     grub-pc-bin grub-efi-amd64-bin \
     locales sudo curl wget network-manager network-manager-gnome \
     htop neofetch btop tree pciutils usbutils lshw vim \
-    parted gparted gdisk fdisk dosfstools e2fsprogs rsync x11-xserver-utils gdebi \
+    parted gparted gdisk fdisk dosfstools e2fsprogs rsync x11-xserver-utils gdebi calamares calamares-settings-debian \
     xorg xserver-xorg lightdm lightdm-gtk-greeter \
     xfce4 xfce4-terminal thunar desktop-base \
     firefox-esr libgtk-4-1 libgtk-4-dev libadwaita-1-0 adwaita-icon-theme zenity \
@@ -224,6 +224,38 @@ XFCE4_KEYBOARD_EOF
 
 done
 
+# Cấu hình Fluent-Dark GTK Theme chuẩn vinceliuice mặc định cho hệ thống (GTK3, GTK4 & XFCE4)
+for GTK_DIR in /etc/skel/.config /home/tizen/.config /root/.config; do
+    mkdir -p "$GTK_DIR/gtk-3.0" "$GTK_DIR/gtk-4.0" "$GTK_DIR/xfce4/xfconf/xfce-perchannel-xml"
+    
+    cat << 'GTK3_SETTINGS_EOF' > "$GTK_DIR/gtk-3.0/settings.ini"
+[Settings]
+gtk-theme-name=Fluent-Dark
+gtk-icon-theme-name=Adwaita
+gtk-cursor-theme-name=Adwaita
+gtk-application-prefer-dark-theme=1
+GTK3_SETTINGS_EOF
+
+    cat << 'GTK4_SETTINGS_EOF' > "$GTK_DIR/gtk-4.0/settings.ini"
+[Settings]
+gtk-theme-name=Fluent-Dark
+gtk-application-prefer-dark-theme=1
+GTK4_SETTINGS_EOF
+
+    cat << 'XSETTINGS_EOF' > "$GTK_DIR/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml"
+<?xml version="1.0" encoding="UTF-8"?>
+<channel name="xsettings" version="1.0">
+  <property name="Net" type="empty">
+    <property name="ThemeName" type="string" value="Fluent-Dark"/>
+    <property name="IconThemeName" type="string" value="Adwaita"/>
+  </property>
+  <property name="Gtk" type="empty">
+    <property name="CursorThemeName" type="string" value="Adwaita"/>
+  </property>
+</channel>
+XSETTINGS_EOF
+done
+
 chown -R tizen:tizen /home/tizen/.config 2>/dev/null || true
 
 # Set default systemd target to graphical.target & enable open-vm-tools service for VMware
@@ -246,15 +278,36 @@ if [ -f "/mnt/d/TizenOS/installer/tizenos-installer/build/tizenos-welcome" ]; th
     chmod +x /usr/local/bin/tizenos-welcome
 fi
 
-# Tạo wrapper script /usr/local/bin/tizenos-installer-gui đảm bảo nạp đúng DISPLAY & GDK_BACKEND=x11
+# Tạo wrapper script /usr/local/bin/tizenos-installer-gui với cơ chế Fail-Safe 3 Tầng (GTK4 -> Terminal Window -> Zenity)
 cat << 'GUI_WRAPPER_EOF' > /usr/local/bin/tizenos-installer-gui
 #!/bin/bash
 export DISPLAY="${DISPLAY:-:0}"
-export XAUTHORITY="${XAUTHORITY:-/home/tizen/.Xauthority}"
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+export XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}"
 export GDK_BACKEND=x11
 export GTK_THEME=Adwaita:dark
+
 xhost +local:root >/dev/null 2>&1 || true
-exec sudo -E GDK_BACKEND=x11 DISPLAY="$DISPLAY" XAUTHORITY="$XAUTHORITY" /usr/local/bin/tizenos-installer "$@"
+xhost +si:localuser:root >/dev/null 2>&1 || true
+
+# Tầng 1: Thử chạy GTK4 C Installer nếu file tồn tại
+if [ -x "/usr/local/bin/tizenos-installer" ]; then
+    echo "[LAUNCHER] Đang mở bộ cài GTK4 Native..."
+    if sudo -E GDK_BACKEND=x11 DISPLAY="$DISPLAY" XAUTHORITY="$XAUTHORITY" XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" /usr/local/bin/tizenos-installer "$@"; then
+        exit 0
+    fi
+    echo "[LAUNCHER] GTK4 Native chưa sẵn sàng, chuyển sang bộ cài cửa sổ Terminal..."
+fi
+
+# Tầng 2: Mở bộ cài đặt trong cửa sổ Terminal giao diện đẹp
+if command -v xfce4-terminal >/dev/null 2>&1; then
+    exec xfce4-terminal --title="🚀 BỘ CÀI ĐẶT TIZENOS" --geometry=95x30 -e "sudo /usr/local/bin/tizenos-install"
+elif command -v xterm >/dev/null 2>&1; then
+    exec xterm -title "🚀 BỘ CÀI ĐẶT TIZENOS" -geometry 95x30 -e "sudo /usr/local/bin/tizenos-install"
+fi
+
+# Tầng 3: Chạy trực tiếp qua sudo
+exec sudo /usr/local/bin/tizenos-install "$@"
 GUI_WRAPPER_EOF
 chmod +x /usr/local/bin/tizenos-installer-gui
 
@@ -313,17 +366,47 @@ AUTOSTART_ENTRY_EOF
     chmod +x "$AUTOSTART_DIR/tizenos-installer.desktop"
 done
 
-useradd -m -s /bin/bash -G sudo tizen 2>/dev/null || true
 groupadd -r nopasswdlogin 2>/dev/null || true
+id -u tizen &>/dev/null || useradd -m -s /bin/bash -G sudo,nopasswdlogin tizen 2>/dev/null || useradd -m -s /bin/bash tizen
 usermod -aG sudo,nopasswdlogin tizen 2>/dev/null || true
 
-echo "tizen:live" | chpasswd || true
-echo "root:tizenroot" | chpasswd || true
+echo "tizen:live" | chpasswd
+echo "root:tizenroot" | chpasswd
 
 # Cấu hình Sudo NOPASSWD cho user tizen để autostart installer không bị chặn password
 mkdir -p /etc/sudoers.d
 echo "tizen ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/tizenos
 chmod 0440 /etc/sudoers.d/tizenos
+
+# Cấu hình Polkit Rule Ubuntu-Style cho Live Installer (Cho phép format đĩa, pkexec, cài đặt OS không cần mật khẩu)
+mkdir -p /etc/polkit-1/rules.d /usr/share/polkit-1/actions
+cat << 'POLKIT_LIVE_EOF' > /etc/polkit-1/rules.d/10-tizenos-live-installer.rules
+/* Ubuntu Casper / Live Installer Polkit Rule */
+polkit.addRule(function(action, subject) {
+    if (subject.isInGroup("sudo") || subject.isInGroup("nopasswdlogin")) {
+        return polkit.Result.YES;
+    }
+});
+POLKIT_LIVE_EOF
+
+cat << 'POLKIT_ACTION_EOF' > /usr/share/polkit-1/actions/org.tizenos.installer.policy
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+"http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<policyconfig>
+  <action id="org.tizenos.installer">
+    <description>Install TizenOS System</description>
+    <message>Authentication is required to install TizenOS</message>
+    <defaults>
+      <allow_any>yes</allow_any>
+      <allow_inactive>yes</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/local/bin/tizenos-installer</annotate>
+    <annotate key="org.freedesktop.policykit.exec.allow_gui">true</annotate>
+  </action>
+</policyconfig>
+POLKIT_ACTION_EOF
 
 # Cấu hình Mặc Định Autologin cho LightDM
 mkdir -p /etc/lightdm/lightdm.conf.d
@@ -523,7 +606,13 @@ echo " Hãy tháo đĩa ISO và khởi động lại máy tính."
 echo "======================================================================"
 INSTALL_SCRIPT_EOF
 
-chmod +x /usr/local/bin/tizenos-install
+# Cấp quyền thực thi full (755) cho tất cả các file công cụ và bộ cài
+chmod -R 755 /usr/local/bin /usr/lib/tizenos 2>/dev/null || true
+chmod +x /usr/local/bin/* /etc/skel/Desktop/*.desktop /home/tizen/Desktop/*.desktop 2>/dev/null || true
+
+# Đảm bảo quyền sở hữu /home/tizen thuộc tizen:tizen 100% để XFCE4/LightDM không bị chớp nhả đăng nhập
+chown -R tizen:tizen /home/tizen 2>/dev/null || true
+chmod 755 /home/tizen 2>/dev/null || true
 
 # Làm sạch apt
 apt-get clean || true
@@ -539,6 +628,10 @@ umount -l "$ROOTFS_DIR/dev/pts" 2>/dev/null || true
 umount -l "$ROOTFS_DIR/sys" 2>/dev/null || true
 umount -l "$ROOTFS_DIR/proc" 2>/dev/null || true
 umount -l "$ROOTFS_DIR/dev" 2>/dev/null || true
+
+# Đảm bảo các thư mục mount point rỗng tồn tại trong rootfs
+mkdir -p "$ROOTFS_DIR/proc" "$ROOTFS_DIR/sys" "$ROOTFS_DIR/dev" "$ROOTFS_DIR/dev/pts" "$ROOTFS_DIR/run" "$ROOTFS_DIR/tmp" "$ROOTFS_DIR/mnt" "$ROOTFS_DIR/media"
+chmod 1777 "$ROOTFS_DIR/tmp"
 
 echo "======================================================================"
 echo " ✓ Debootstrap hoàn tất cấu hình base RootFS!"

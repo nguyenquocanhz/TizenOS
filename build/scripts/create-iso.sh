@@ -11,7 +11,7 @@ set -euo pipefail
 
 WORK_DIR="${1:-build/output/iso_work}"
 OUTPUT_ISO="${2:-build/output/tizenos-live.iso}"
-ROOTFS_DIR="${3:-build/output/rootfs}"
+ROOTFS_DIR="${3:-/var/tmp/tizenos_rootfs}"
 
 echo "======================================================================"
 echo " Khởi tạo Đóng gói TizenOS Hybrid Live ISO: $OUTPUT_ISO"
@@ -32,12 +32,18 @@ if [ ! -f "$WORK_DIR/live/filesystem.squashfs" ] || [ ! -s "$WORK_DIR/live/files
     fi
 
     echo "Dọn dẹp virtual mounts trước khi nén squashfs..."
+    umount -l "$ROOTFS_DIR/dev/pts" 2>/dev/null || true
     umount -l "$ROOTFS_DIR/proc" 2>/dev/null || true
     umount -l "$ROOTFS_DIR/sys" 2>/dev/null || true
     umount -l "$ROOTFS_DIR/dev" 2>/dev/null || true
+    umount -l "$ROOTFS_DIR/run" 2>/dev/null || true
+
+    # Đảm bảo các thư mục mount point rỗng tồn tại trong rootfs (bắt buộc cho live-boot /root/dev, /root/sys, /root/proc)
+    mkdir -p "$ROOTFS_DIR/proc" "$ROOTFS_DIR/sys" "$ROOTFS_DIR/dev" "$ROOTFS_DIR/dev/pts" "$ROOTFS_DIR/run" "$ROOTFS_DIR/tmp" "$ROOTFS_DIR/mnt" "$ROOTFS_DIR/media"
+    chmod 1777 "$ROOTFS_DIR/tmp"
 
     echo "Đang nén RootFS thành filesystem.squashfs..."
-    mksquashfs "$ROOTFS_DIR" "$WORK_DIR/live/filesystem.squashfs" -comp xz -e proc sys dev run tmp
+    mksquashfs "$ROOTFS_DIR" "$WORK_DIR/live/filesystem.squashfs" -comp xz -wildcards -e "proc/*" "sys/*" "dev/*" "run/*" "tmp/*"
 fi
 
 # 2. Copy Kernel & Initrd
@@ -49,15 +55,19 @@ INITRD_FILE=$(ls -1 "$ROOTFS_DIR/boot/initrd.img-"* 2>/dev/null | sort -V | tail
 
 if [ -n "$KERNEL_FILE" ] && [ -f "$KERNEL_FILE" ]; then
     cp "$KERNEL_FILE" "$WORK_DIR/live/vmlinuz"
+elif [ -f "$WORK_DIR/live/vmlinuz" ]; then
+    echo "Sử dụng vmlinuz hiện có tại $WORK_DIR/live/vmlinuz"
 else
-    echo "[ERROR] Không tìm thấy vmlinuz trong $ROOTFS_DIR/boot!"
+    echo "[ERROR] Không tìm thấy vmlinuz trong $ROOTFS_DIR/boot hoặc $WORK_DIR/live!"
     exit 1
 fi
 
 if [ -n "$INITRD_FILE" ] && [ -f "$INITRD_FILE" ]; then
     cp "$INITRD_FILE" "$WORK_DIR/live/initrd.img"
+elif [ -f "$WORK_DIR/live/initrd.img" ]; then
+    echo "Sử dụng initrd.img hiện có tại $WORK_DIR/live/initrd.img"
 else
-    echo "[ERROR] Không tìm thấy initrd.img trong $ROOTFS_DIR/boot!"
+    echo "[ERROR] Không tìm thấy initrd.img trong $ROOTFS_DIR/boot hoặc $WORK_DIR/live!"
     exit 1
 fi
 

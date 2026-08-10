@@ -1,0 +1,43 @@
+#!/bin/bash
+# ==============================================================================
+# TizenOS Fail-Safe Installer GUI Launcher
+# Tự động chọn phương thức hiển thị bộ cài tốt nhất:
+# Tầng 1: Calamares Universal Linux Installer (/usr/bin/calamares)
+# Tầng 2: GTK4 Native Binary GUI (/usr/local/bin/tizenos-installer)
+# Tầng 3: Cửa sổ XFCE Terminal GUI (/usr/local/bin/tizenos-install)
+# ==============================================================================
+
+export DISPLAY="${DISPLAY:-:0}"
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+export XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}"
+export GDK_BACKEND=x11
+export GTK_THEME=Adwaita:dark
+
+xhost +local:root >/dev/null 2>&1 || true
+xhost +si:localuser:root >/dev/null 2>&1 || true
+
+# Tầng 1: Calamares Universal Installer (Chuẩn Manjaro/Debian/KDE Neon)
+if [ -x "/usr/bin/calamares" ]; then
+    echo "[LAUNCHER] Đang mở bộ cài Calamares TizenOS..."
+    exec pkexec /usr/bin/calamares "$@"
+fi
+
+# Tầng 2: Thử chạy GTK4 C Installer nếu file tồn tại và thực thi được
+if [ -x "/usr/local/bin/tizenos-installer" ]; then
+    echo "[LAUNCHER] Đang mở bộ cài GTK4 Native..."
+    if sudo -E GDK_BACKEND=x11 DISPLAY="$DISPLAY" XAUTHORITY="$XAUTHORITY" XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" /usr/local/bin/tizenos-installer "$@"; then
+        exit 0
+    fi
+    echo "[LAUNCHER] GTK4 Native chưa sẵn sàng, chuyển sang bộ cài cửa sổ Terminal..."
+fi
+
+# Tầng 3: Mở bộ cài đặt trong cửa sổ Terminal giao diện đẹp
+if command -v xfce4-terminal >/dev/null 2>&1; then
+    echo "[LAUNCHER] Đang mở bộ cài trong XFCE4 Terminal..."
+    exec xfce4-terminal --title="🚀 BỘ CÀI ĐẶT TIZENOS" --geometry=95x30 -e "sudo /usr/local/bin/tizenos-install"
+elif command -v xterm >/dev/null 2>&1; then
+    exec xterm -title "🚀 BỘ CÀI ĐẶT TIZENOS" -geometry 95x30 -e "sudo /usr/local/bin/tizenos-install"
+fi
+
+# Fallback: Chạy trực tiếp qua sudo
+exec sudo /usr/local/bin/tizenos-install "$@"

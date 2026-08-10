@@ -156,11 +156,16 @@ static bool bind_virtual_fs() {
     run_cmd("mount --bind /proc " TARGET_MOUNT "/proc");
     run_cmd("mount --bind /sys " TARGET_MOUNT "/sys");
     run_cmd("mount --bind /run " TARGET_MOUNT "/run");
+    if (access("/sys/firmware/efi/efivars", F_OK) == 0) {
+        run_cmd("mkdir -p " TARGET_MOUNT "/sys/firmware/efi/efivars 2>/dev/null || true");
+        run_cmd("mount --bind /sys/firmware/efi/efivars " TARGET_MOUNT "/sys/firmware/efi/efivars 2>/dev/null || true");
+    }
     return true;
 }
 
 static bool unbind_virtual_fs() {
     printf("[TARGET-INSTALL] Unmounting virtual filesystems...\n");
+    run_cmd("umount -l " TARGET_MOUNT "/sys/firmware/efi/efivars 2>/dev/null || true");
     run_cmd("umount -l " TARGET_MOUNT "/dev/pts 2>/dev/null || true");
     run_cmd("umount -l " TARGET_MOUNT "/dev 2>/dev/null || true");
     run_cmd("umount -l " TARGET_MOUNT "/proc 2>/dev/null || true");
