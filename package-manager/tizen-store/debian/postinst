@@ -1,0 +1,9 @@
+#!/bin/sh
+set -e
+if [ "$1" = "configure" ]; then
+    # Cập nhật cache .desktop và icon để ứng dụng xuất hiện ngay trong menu
+    update-desktop-database -q /usr/share/applications 2>/dev/null || true
+    gtk-update-icon-cache -q -f -t /usr/share/icons/hicolor 2>/dev/null || true
+fi
+#DEBHELPER#
+exit 0

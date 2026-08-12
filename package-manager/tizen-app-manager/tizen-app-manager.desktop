@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Tizen App Manager
+Comment=Manage installed Tizen & Debian packages, scan system .deb files, install and uninstall apps
+Exec=/usr/bin/tizen-app-manager
+Icon=tizen-app-manager
+# Xem ghi chú ở tizen-store.desktop về quy tắc Categories.
+Categories=System;PackageManager;X-Tizen;
+Keywords=package;manager;deb;tpk;uninstall;apps;
+Terminal=false
+StartupNotify=true

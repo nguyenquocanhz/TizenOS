@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=Tizen App Store
+Comment=Explore and 1-Click install top Linux, Debian 12, and Tizen Native applications
+Exec=/usr/bin/tizen-store
+Icon=tizen-store
+# Desktop Entry Spec: đúng MỘT main category (System), phần mở rộng riêng của
+# dự án phải có tiền tố X-. Bản cũ dùng "Tizen" và "Store" trần nên
+# desktop-file-validate báo lỗi và lintian bắn desktop-entry-invalid-category.
+Categories=System;PackageManager;X-Tizen;
+Keywords=store;software;package;install;apt;deb;tpk;
+Terminal=false
+StartupNotify=true

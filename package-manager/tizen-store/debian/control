@@ -1,0 +1,15 @@
+Source: tizen-store
+Section: admin
+Priority: optional
+Maintainer: TizenOS <admin@tizenos.org>
+Build-Depends: debhelper (>= 11), cmake, pkg-config,
+               libglib2.0-dev, libgtk-4-dev, libtizen-core-dev
+Standards-Version: 4.6.0
+
+Package: tizen-store
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libgtk-4-1, libtizen-core1, policykit-1, apt
+Description: Trung tam phan mem TizenOS (Tizen App Store)
+ Kho ung dung GTK4 cho TizenOS: duyet theo danh muc, tim kiem, cai dat va
+ go bo goi Debian bang mot lan bam. Trang thai cai dat duoc doc truc tiep tu
+ dpkg.
