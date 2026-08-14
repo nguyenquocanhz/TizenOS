@@ -350,6 +350,23 @@ int album_load_files(GFile **files, int n_files)
 {
     if (!files || n_files <= 0) return -1;
 
+    /* -------------------------------------------------------------------------
+     * ĐẶT LẠI bộ lọc và ô tìm kiếm trước khi nạp.
+     * -------------------------------------------------------------------------
+     * Album là ứng dụng single-instance: bấm đúp một tấm ảnh trong trình quản lý
+     * tệp sẽ định tuyến tới CỬA SỔ ĐANG MỞ, kèm theo mọi trạng thái lọc mà người
+     * dùng để lại đó. finish_scan() áp lại current_filter, nên nếu bộ lọc đang là
+     * "Video" hay "Yêu thích" thì tấm ảnh vừa mở KHÔNG nằm trong filtered_list,
+     * vòng tìm bên dưới trả -1, và on_open() tưởng là hỏng nên quay về thư viện
+     * mặc định — người dùng bấm vào ảnh mà app mở thứ khác.
+     *
+     * Mở tệp từ bên ngoài là một yêu cầu tường minh: nó phải thắng bộ lọc cũ.
+     * ---------------------------------------------------------------------- */
+    g_album_app.current_filter = FILTER_ALL;
+    g_clear_pointer(&g_album_app.search_query, g_free);
+    if (g_album_app.search_entry)
+        gtk_editable_set_text(GTK_EDITABLE(g_album_app.search_entry), "");
+
     album_clear_media();
 
     /* Gom thư mục cha, khử trùng lặp: mở 20 ảnh cùng một thư mục chỉ quét 1 lần. */

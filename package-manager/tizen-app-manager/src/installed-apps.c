@@ -39,6 +39,79 @@ static void on_launch_clicked(GtkButton *btn, gpointer user_data) {
                   TAG, err ? err->message : "lỗi không rõ");
 }
 
+/* -----------------------------------------------------------------------------
+ * Bản đồ tệp .desktop -> tên gói Debian sở hữu
+ * -----------------------------------------------------------------------------
+ * Tên tệp .desktop KHÔNG phải tên gói. `org.gnome.Evince.desktop` thuộc gói
+ * `evince`; `code.desktop` thuộc `code`. Bản cũ đưa thẳng app_id (tên tệp bỏ
+ * đuôi) cho apt-get remove, nên với mọi ứng dụng có hai tên khác nhau thì nút
+ * "Gỡ bỏ" hoặc bị từ chối vì tên không hợp lệ, hoặc chạy remove một gói không
+ * tồn tại rồi báo thành công — gói thật vẫn nằm nguyên trên máy.
+ *
+ * Gọi `dpkg -S` MỘT lần cho cả thư mục thay vì một lần cho mỗi tệp: máy cài
+ * nhiều app có hàng trăm .desktop, spawn từng tiến trình cho mỗi cái sẽ làm
+ * treo giao diện mỗi lần bấm "Làm mới".
+ *
+ * Trả về bảng băm (đường dẫn -> tên gói), hoặc NULL nếu không có dpkg.
+ * -------------------------------------------------------------------------- */
+static GHashTable *build_desktop_owner_map(void)
+{
+    char *dpkg = g_find_program_in_path("dpkg");
+    if (!dpkg) return NULL;
+
+    /* Mẫu phải kèm phần khớp tên tệp, không được là thư mục trần.
+     * Đưa vào thư mục trần thì dpkg khớp chính THƯ MỤC đó và trả về đúng một
+     * dòng gộp mọi gói sở hữu nó ("pkg1, pkg2, ...: /usr/share/applications"),
+     * không có dòng nào cho từng tệp — bảng băm rỗng và mọi thứ lặng lẽ lùi về
+     * app_id, tức là lỗi vẫn còn nguyên.
+     *
+     * g_spawn_sync KHÔNG qua shell, nên ký tự đại diện đến tay dpkg nguyên vẹn
+     * và chính dpkg làm việc khớp mẫu — đúng ý đồ. */
+    char *argv[] = { dpkg, (char *)"-S", (char *)APPS_DIR "/*.desktop", NULL };
+    char *out = NULL;
+    int status = 0;
+
+    gboolean ok = g_spawn_sync(NULL, argv, NULL, G_SPAWN_STDERR_TO_DEV_NULL,
+                               NULL, NULL, &out, NULL, &status, NULL);
+    g_free(dpkg);
+
+    /* dpkg -S trả khác 0 khi không khớp gì — đó là trạng thái hợp lệ, không lỗi. */
+    if (!ok || !out) {
+        g_free(out);
+        return NULL;
+    }
+
+    GHashTable *map = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+
+    char **lines = g_strsplit(out, "\n", -1);
+    for (int i = 0; lines[i]; i++) {
+        /* Mỗi dòng: "gói: /đường/dẫn"  — hoặc "gói1, gói2: /đường/dẫn" khi
+         * nhiều gói cùng sở hữu (hiếm, thường do diversion). Lấy gói đầu. */
+        char *sep = strstr(lines[i], ": /");
+        if (!sep) continue;
+
+        *sep = '\0';
+        const char *path = sep + 2;
+
+        char *comma = strchr(lines[i], ',');
+        if (comma) *comma = '\0';
+
+        /* Tên gói có thể kèm kiến trúc: "evince:amd64" -> bỏ phần sau dấu hai chấm. */
+        char *colon = strchr(lines[i], ':');
+        if (colon) *colon = '\0';
+
+        char *pkg = g_strstrip(g_strdup(lines[i]));
+        if (*pkg)
+            g_hash_table_insert(map, g_strdup(g_strstrip((char *)path)), pkg);
+        else
+            g_free(pkg);
+    }
+    g_strfreev(lines);
+    g_free(out);
+
+    return map;
+}
+
 /* Chạy trên main loop sau khi apt-get remove kết thúc. */
 static void on_uninstall_finished(bool ok, const char *output,
                                   const GError *error, gpointer user_data) {
@@ -107,6 +180,9 @@ static void scan_installed_apps(void) {
     DIR *dir = opendir(APPS_DIR);
     if (!dir) return;
 
+    /* Bản đồ đường-dẫn -> tên gói Debian, dựng MỘT lần cho cả lượt quét. */
+    GHashTable *owner_map = build_desktop_owner_map();
+
     struct dirent *entry;
     while ((entry = readdir(dir)) != NULL && total_apps < MAX_APPS) {
         if (strstr(entry->d_name, ".desktop")) {
@@ -128,13 +204,29 @@ static void scan_installed_apps(void) {
 
                 if (name && exec) {
                     InstalledAppInfo *app = &app_list[total_apps];
-                    strncpy(app->name, name, sizeof(app->name) - 1);
-                    strncpy(app->exec, exec, sizeof(app->exec) - 1);
-                    strncpy(app->icon, icon ? icon : "application-x-executable", sizeof(app->icon) - 1);
+                    /* g_strlcpy chứ không phải strncpy.
+                     * strncpy(dst, src, sizeof(dst)-1) KHÔNG kết thúc chuỗi khi
+                     * nguồn bị cắt: nó ghi đúng n byte rồi dừng, để nguyên byte
+                     * cuối. app_list là mảng dùng lại giữa các lần quét, nên byte
+                     * đó có thể còn rác của mục dài hơn ở lượt trước — kết quả là
+                     * một chuỗi không có ký tự kết thúc. app_id chỉ có 128 byte
+                     * trong khi d_name tới 256, nên đây là đường thật sự chạm tới.
+                     * g_strlcpy luôn kết thúc chuỗi. */
+                    g_strlcpy(app->name, name, sizeof(app->name));
+                    g_strlcpy(app->exec, exec, sizeof(app->exec));
+                    g_strlcpy(app->icon, icon ? icon : "application-x-executable",
+                              sizeof(app->icon));
 
-                    strncpy(app->app_id, entry->d_name, sizeof(app->app_id) - 1);
+                    g_strlcpy(app->app_id, entry->d_name, sizeof(app->app_id));
                     char *dot = strrchr(app->app_id, '.');
                     if (dot) *dot = '\0';
+
+                    /* Tên gói thật để gỡ cài đặt. Không tra được (gói .tpk, hoặc
+                     * tệp .desktop không thuộc gói nào) thì lùi về app_id. */
+                    const char *owner = owner_map
+                        ? g_hash_table_lookup(owner_map, path) : NULL;
+                    g_strlcpy(app->pkg_name, owner ? owner : app->app_id,
+                              sizeof(app->pkg_name));
 
                     snprintf(app->type, sizeof(app->type), "%s", pkg_type ? pkg_type : "deb");
                     snprintf(app->smack_label, sizeof(app->smack_label), "%s", pkg_type ? "User" : "System");
@@ -149,6 +241,7 @@ static void scan_installed_apps(void) {
         }
     }
     closedir(dir);
+    if (owner_map) g_hash_table_destroy(owner_map);
 }
 
 void refresh_installed_apps_list(const char *search_query, const char *filter_type) {
@@ -223,7 +316,9 @@ void refresh_installed_apps_list(const char *search_query, const char *filter_ty
         gtk_box_append(GTK_BOX(card), btn_cache);
 
         GtkWidget *btn_uninstall = tizen_button_new("user-trash-symbolic", "Gỡ bỏ");
-        g_signal_connect(btn_uninstall, "clicked", G_CALLBACK(on_uninstall_clicked), g_strdup(app->app_id));
+        /* pkg_name, KHÔNG phải app_id — xem build_desktop_owner_map().
+         * app_id là tên tệp .desktop; apt-get remove cần tên gói thật. */
+        g_signal_connect(btn_uninstall, "clicked", G_CALLBACK(on_uninstall_clicked), g_strdup(app->pkg_name));
         gtk_box_append(GTK_BOX(card), btn_uninstall);
 
         gtk_box_append(GTK_BOX(list_box_apps), card);

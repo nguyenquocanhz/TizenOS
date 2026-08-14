@@ -19,14 +19,42 @@
 
 #define TAG "APP_STORE_CATALOG"
 
-// Data structure for async installation context
+/* -----------------------------------------------------------------------------
+ * Ngữ cảnh cài đặt bất đồng bộ
+ * -----------------------------------------------------------------------------
+ * VÒNG ĐỜI WIDGET — vì sao phải giữ tham chiếu MẠNH
+ * Hai widget dưới đây là con của thẻ trong catalog. refresh_app_store_catalog()
+ * gỡ sạch con của flowbox mỗi lần người dùng gõ tìm kiếm, đổi danh mục hoặc bấm
+ * "Cập nhật kho". Nếu apt còn đang chạy lúc đó, thẻ bị huỷ trong khi:
+ *
+ *   - timer 80ms vẫn gọi gtk_progress_bar_pulse() trên progress_bar
+ *   - callback hoàn tất vẫn gọi set_sensitive()/set_label() trên btn_install
+ *
+ * Cả hai đều đọc vào bộ nhớ đã giải phóng — use-after-free, và rất dễ gặp vì
+ * người dùng hay gõ tìm kiếm tiếp trong lúc chờ cài.
+ *
+ * Giữ tham chiếu mạnh (g_object_ref) khiến widget vẫn SỐNG sau khi bị gỡ khỏi
+ * cây: thao tác lên nó chỉ đơn giản là vô hình, không còn nguy hiểm. Tham chiếu
+ * được nhả trong install_task_free().
+ * -------------------------------------------------------------------------- */
 typedef struct {
     AppStoreItem *item;
-    GtkWidget *btn_install;
-    GtkWidget *progress_bar;
+    GtkWidget *btn_install;    /* giữ ref mạnh */
+    GtkWidget *progress_bar;   /* giữ ref mạnh */
     guint pulse_timer_id;
     bool success;
 } InstallTaskData;
+
+static void install_task_free(InstallTaskData *task) {
+    if (!task) return;
+    if (task->pulse_timer_id > 0) {
+        g_source_remove(task->pulse_timer_id);
+        task->pulse_timer_id = 0;
+    }
+    g_clear_object(&task->btn_install);
+    g_clear_object(&task->progress_bar);
+    g_free(task);
+}
 
 static AppStoreItem store_catalog[] = {
     // 🌐 Internet & Communication
@@ -176,24 +204,36 @@ static gboolean on_install_finished_main_thread(gpointer user_data) {
         gtk_widget_set_sensitive(task->btn_install, TRUE);
         if (task->success) {
             task->item->is_installed = true;
-            gtk_button_set_label(GTK_BUTTON(task->btn_install), "🚀 Mở App");
-
-            GtkWidget *parent = GTK_WIDGET(gtk_widget_get_root(task->btn_install));
-            GtkWidget *dialog = gtk_message_dialog_new(
-                GTK_WINDOW(parent),
-                GTK_DIALOG_MODAL,
-                GTK_MESSAGE_INFO,
-                GTK_BUTTONS_OK,
-                "🎉 Đã cài đặt thành công '%s' vào TizenOS!", task->item->name
-            );
-            g_signal_connect_swapped(dialog, "response", G_CALLBACK(gtk_window_destroy), dialog);
-            gtk_window_present(GTK_WINDOW(dialog));
+            /* tizen_button_set_icon_label, KHÔNG phải gtk_button_set_label:
+             * hàm sau vứt bỏ hộp icon+chữ và thay bằng một GtkLabel trần, nên
+             * nút mất sạch biểu tượng ngay lần đổi nhãn đầu tiên. */
+            tizen_button_set_icon_label(task->btn_install,
+                                        "media-playback-start-symbolic", "Mở App");
         } else {
-            gtk_button_set_label(GTK_BUTTON(task->btn_install), "📥 Cài Đặt");
+            tizen_button_set_icon_label(task->btn_install,
+                                        "folder-download-symbolic", "Cài Đặt");
         }
     }
 
-    g_free(task);
+    if (task->success) {
+        /* Cửa sổ cha lấy từ flowbox catalog, KHÔNG từ nút.
+         * Nếu catalog đã được dựng lại thì nút đang mồ côi và
+         * gtk_widget_get_root() trả NULL -> GTK_WINDOW(NULL) sinh cảnh báo và
+         * hộp thoại không có cha. Flowbox thì luôn còn trong cây. */
+        GtkWidget *root = catalog_flowbox
+            ? GTK_WIDGET(gtk_widget_get_root(catalog_flowbox)) : NULL;
+        GtkWidget *dialog = gtk_message_dialog_new(
+            (root && GTK_IS_WINDOW(root)) ? GTK_WINDOW(root) : NULL,
+            GTK_DIALOG_MODAL,
+            GTK_MESSAGE_INFO,
+            GTK_BUTTONS_OK,
+            "Đã cài đặt thành công '%s' vào TizenOS.", task->item->name
+        );
+        g_signal_connect_swapped(dialog, "response", G_CALLBACK(gtk_window_destroy), dialog);
+        gtk_window_present(GTK_WINDOW(dialog));
+    }
+
+    install_task_free(task);
     return G_SOURCE_REMOVE;
 }
 
@@ -259,13 +299,15 @@ static void on_install_app_clicked(GtkButton *btn, gpointer user_data) {
 
     gtk_widget_set_visible(pbar, TRUE);
     gtk_progress_bar_set_pulse_step(GTK_PROGRESS_BAR(pbar), 0.1);
-    gtk_button_set_label(btn, "⏳ Đang cài...");
+    tizen_button_set_icon_label(GTK_WIDGET(btn), "content-loading-symbolic", "Đang cài...");
     gtk_widget_set_sensitive(GTK_WIDGET(btn), FALSE);
 
     InstallTaskData *task = g_new0(InstallTaskData, 1);
     task->item = item;
-    task->btn_install = GTK_WIDGET(btn);
-    task->progress_bar = pbar;
+    /* Ref MẠNH: catalog có thể bị dựng lại trong lúc apt chạy — xem ghi chú ở
+     * InstallTaskData. Thiếu ref là use-after-free. */
+    task->btn_install  = GTK_WIDGET(g_object_ref(btn));
+    task->progress_bar = GTK_WIDGET(g_object_ref(pbar));
     task->pulse_timer_id = g_timeout_add(80, on_install_pulse_timer, task);
 
     // Khởi tạo Worker Thread cài đặt
@@ -545,8 +587,12 @@ void refresh_app_store_catalog(const char *category_filter, const char *search_q
         gtk_widget_set_vexpand(lbl_desc, TRUE);
         gtk_box_append(GTK_BOX(card), lbl_desc);
 
-        // Progress Bar (Ẩn mặc định)
-        GtkWidget *pbar = gtk_progress_bar_new();
+        /* Không tạo sẵn progress bar ở đây.
+         * Dòng cũ `GtkWidget *pbar = gtk_progress_bar_new();` không bao giờ được
+         * gắn vào thẻ và cũng không được dùng: on_install_app_clicked() tự tìm
+         * hoặc tự tạo progress bar khi thật sự bắt đầu cài. Đó là một GObject
+         * floating không ai sink, rò rỉ một cái cho MỖI thẻ, mỗi lần vẽ lại danh
+         * mục — tức mỗi ký tự gõ vào ô tìm kiếm. */
         // Footer (Rating + Size + Action Button + Details Button)
         GtkWidget *bot_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
         char meta_str[128];

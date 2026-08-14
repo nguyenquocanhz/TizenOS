@@ -12,6 +12,11 @@ extern "C" {
 typedef struct {
     char name[256];
     char app_id[128];
+    /* Tên gói Debian THỰC SỰ sở hữu tệp .desktop này, tra bằng dpkg -S.
+     * Khác app_id: app_id là tên tệp .desktop bỏ đuôi, và với rất nhiều gói hai
+     * thứ đó không trùng nhau (org.gnome.Evince.desktop thuộc gói `evince`).
+     * Gỡ cài đặt PHẢI dùng trường này, không được dùng app_id. */
+    char pkg_name[128];
     char exec[512];
     char icon[256];
     char type[64];        // "tpk", "deb", "wgt"
