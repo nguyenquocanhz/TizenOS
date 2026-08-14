@@ -334,15 +334,17 @@ fi
 echo
 echo "[4/4] Sinh và kiểm tra băm..."
 cd "$OUT_DIR"
-for p in tizen-album tizen-store tizen-app-manager; do
-    f="${p}_${VERSION}_${ARCH}.deb"
+# Băm cho MỌI .deb trong thư mục, không chỉ ba gói app.
+# Bản cũ chỉ ghi ba dòng rồi ghi đè tệp SHA256SUMS — nếu build-all-debs.sh đã
+# chạy trước, danh sách băm của 10 gói hệ thống bị xoá sạch và người tải về
+# tưởng bản phát hành chỉ có ba gói. Cả hai script giờ cùng sinh danh sách đầy
+# đủ, nên chạy thứ tự nào cũng ra kết quả đúng.
+rm -f SHA256SUMS SHA512SUMS MD5SUMS
+for f in *.deb; do
     [ -e "$f" ] || continue
-    sha256sum "$f" >> SHA256SUMS.new
-    sha512sum "$f" >> SHA512SUMS.new
-    md5sum    "$f" >> MD5SUMS.new
-done
-for algo in SHA256 SHA512 MD5; do
-    [ -e "${algo}SUMS.new" ] && mv "${algo}SUMS.new" "${algo}SUMS"
+    sha256sum "$f" >> SHA256SUMS
+    sha512sum "$f" >> SHA512SUMS
+    md5sum    "$f" >> MD5SUMS
 done
 
 echo

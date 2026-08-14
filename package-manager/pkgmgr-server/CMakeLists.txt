@@ -11,4 +11,9 @@ target_link_libraries(tizen-pkgmgrd ${GLIB_LIBRARIES} ${SQLITE_LIBRARIES})
 
 install(TARGETS tizen-pkgmgrd DESTINATION sbin)
 install(FILES conf/tizen-pkgmgr.conf DESTINATION /etc/dbus-1/system.d/)
-install(FILES conf/tizen-pkgmgr.service DESTINATION /lib/systemd/system/)
+# /usr/lib, KHÔNG phải /lib.
+# Debian đã merged-/usr: /lib chỉ là symlink tới /usr/lib. Gói .deb đặt tệp qua
+# đường dẫn symlink đó vi phạm quy tắc aliased-location (lintian báo lỗi) và có
+# thể va chạm khi dpkg giải nén. Mọi unit systemd khác của dự án vốn đã nằm ở
+# /usr/lib/systemd/system; đây là chỗ duy nhất còn lệch.
+install(FILES conf/tizen-pkgmgr.service DESTINATION /usr/lib/systemd/system/)

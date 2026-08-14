@@ -48,6 +48,17 @@ static void on_refresh_all_clicked(GtkButton *btn, gpointer user_data) {
     refresh_deb_files_list();
 }
 
+/* Nhãn tab cho GtkNotebook: biểu tượng icon theme + chữ.
+ * Tách riêng vì tizen_button_new() dựng ra một GtkButton — bỏ nguyên một nút
+ * vào làm nhãn tab sẽ lồng nút trong nút, hỏng cả giao diện lẫn thao tác bàn phím. */
+static GtkWidget *tab_label_new(const char *icon_name, const char *label)
+{
+    GtkWidget *box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
+    gtk_box_append(GTK_BOX(box), gtk_image_new_from_icon_name(icon_name));
+    gtk_box_append(GTK_BOX(box), gtk_label_new(label));
+    return box;
+}
+
 static void load_custom_css(void) {
     /* Theme dùng chung — xem tizen/theme.h và ghi chú ở tizen-store/src/main.c. */
     tizen_theme_apply();
@@ -71,8 +82,12 @@ static void activate(GtkApplication *app, gpointer user_data) {
     gtk_widget_set_margin_top(header_box, 16);
     gtk_widget_set_margin_bottom(header_box, 8);
 
-    // Title
-    GtkWidget *lbl_title = gtk_label_new("🚀  Tizen App Manager");
+    // Title — biểu tượng lấy từ icon theme, không dùng emoji (xem tizen/theme.h)
+    GtkWidget *app_icon = gtk_image_new_from_icon_name("tizen-app-manager");
+    gtk_image_set_pixel_size(GTK_IMAGE(app_icon), 24);
+    gtk_box_append(GTK_BOX(header_box), app_icon);
+
+    GtkWidget *lbl_title = gtk_label_new("Tizen App Manager");
     gtk_widget_add_css_class(lbl_title, "title-large");
     gtk_box_append(GTK_BOX(header_box), lbl_title);
 
@@ -102,13 +117,18 @@ static void activate(GtkApplication *app, gpointer user_data) {
     GtkWidget *notebook = gtk_notebook_new();
     gtk_widget_set_vexpand(notebook, TRUE);
 
-    // Tab 1: Installed Apps View
+    /* Nhãn tab: biểu tượng icon theme + chữ, thay cho emoji.
+     * gtk_notebook_append_page() nhận một widget bất kỳ làm nhãn tab, nên dùng
+     * chung một hộp icon+label như các nút khác. */
     GtkWidget *view_installed = create_installed_apps_view();
-    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), view_installed, gtk_label_new("📦 Ứng dụng đã cài đặt"));
+    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), view_installed,
+                             tab_label_new("package-x-generic-symbolic",
+                                           "Ứng dụng đã cài đặt"));
 
-    // Tab 2: System .deb Files View
     GtkWidget *view_deb = create_deb_files_view();
-    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), view_deb, gtk_label_new("📄 Tệp .deb trong hệ thống"));
+    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), view_deb,
+                             tab_label_new("document-open-symbolic",
+                                           "Tệp .deb trong hệ thống"));
 
     gtk_box_append(GTK_BOX(root_box), notebook);
 
