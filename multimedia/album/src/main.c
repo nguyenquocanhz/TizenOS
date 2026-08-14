@@ -165,6 +165,28 @@ static void on_favorite_clicked(GtkButton *b, gpointer d) { (void)b; (void)d; al
 static void on_info_clicked(GtkButton *b, gpointer d) { (void)b; (void)d; album_toggle_info(); }
 static void on_fullscreen_clicked(GtkButton *b, gpointer d) { (void)b; (void)d; album_toggle_fullscreen(); }
 static void on_crop_clicked(GtkButton *b, gpointer d) { (void)b; (void)d; album_show_editor(); }
+static void on_view_rotate_left(GtkButton *b, gpointer d)  { (void)b; (void)d; album_rotate(-90); }
+static void on_view_rotate_right(GtkButton *b, gpointer d) { (void)b; (void)d; album_rotate(90); }
+static void on_view_delete_clicked(GtkButton *b, gpointer d) { (void)b; (void)d; album_delete_current(); }
+
+/* --- Chọn hàng loạt trong lưới ------------------------------------------ */
+static void on_bulk_favorite_clicked(GtkButton *b, gpointer d) { (void)b; (void)d; album_bulk_favorite(); }
+static void on_bulk_delete_clicked(GtkButton *b, gpointer d)   { (void)b; (void)d; album_bulk_delete(); }
+static void on_selection_clear_clicked(GtkButton *b, gpointer d) { (void)b; (void)d; album_selection_clear(); }
+
+static void on_flowbox_selection_changed(GtkFlowBox *box, gpointer d) {
+    (void)box; (void)d;
+    album_selection_changed();
+}
+
+/* Nhấp đúp (hoặc Enter) trên một thẻ -> mở trình xem.
+ * Với GTK_SELECTION_MULTIPLE, nhấp một lần là CHỌN chứ không mở — đúng thói
+ * quen của trình quản lý tệp. Bản cũ gắn GtkGestureClick vào từng thẻ và mở
+ * ngay khi nhấn, nên không thể vừa chọn nhiều vừa mở được. */
+static void on_child_activated(GtkFlowBox *box, GtkFlowBoxChild *child, gpointer d) {
+    (void)box; (void)d;
+    album_show_viewer_at(gtk_flow_box_child_get_index(child));
+}
 
 // Editor Callback Functions
 static void on_edit_rot_left(GtkButton *b, gpointer d) { (void)b; (void)d; album_editor_rotate(-90); }
@@ -196,6 +218,11 @@ static gboolean on_key_pressed(GtkEventControllerKey *controller, guint keyval, 
 
 static void build_main_window(GtkApplication *app) {
     tizen_theme_apply();
+
+    /* Nạp danh sách yêu thích TRƯỚC khi quét thư mục lần đầu: album_add_file()
+     * hỏi album_is_favorite_path() cho từng tệp, nạp sau thì lượt quét đầu tiên
+     * ra toàn FALSE. */
+    album_favorites_load();
 
     g_album_app.window = gtk_application_window_new(app);
     gtk_window_set_title(GTK_WINDOW(g_album_app.window), "Tizen Album - Thư viện Ảnh & Video");
@@ -310,15 +337,60 @@ static void build_main_window(GtkApplication *app) {
     gtk_widget_set_vexpand(g_album_app.stack, TRUE);
 
     // Stack Page 0: Grid View
+    GtkWidget *grid_page = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+
+    /* -------------------------------------------------------------------------
+     * Thanh công cụ chọn hàng loạt — chỉ hiện khi có ít nhất một ảnh được chọn.
+     * Đặt phía trên lưới thay vì nổi đè lên, để không che mất hàng ảnh đầu tiên.
+     * ---------------------------------------------------------------------- */
+    g_album_app.selection_bar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
+    gtk_widget_add_css_class(g_album_app.selection_bar, "card");
+    gtk_widget_set_margin_start(g_album_app.selection_bar, 16);
+    gtk_widget_set_margin_end(g_album_app.selection_bar, 16);
+    gtk_widget_set_margin_top(g_album_app.selection_bar, 8);
+    gtk_widget_set_margin_bottom(g_album_app.selection_bar, 4);
+
+    g_album_app.lbl_selection_count = gtk_label_new("Đã chọn 0 mục");
+    gtk_widget_set_margin_start(g_album_app.lbl_selection_count, 12);
+    gtk_widget_set_hexpand(g_album_app.lbl_selection_count, TRUE);
+    gtk_label_set_xalign(GTK_LABEL(g_album_app.lbl_selection_count), 0.0f);
+    gtk_box_append(GTK_BOX(g_album_app.selection_bar), g_album_app.lbl_selection_count);
+
+    GtkWidget *btn_bulk_fav = tizen_button_new("starred-symbolic", "Yêu thích");
+    g_signal_connect(btn_bulk_fav, "clicked", G_CALLBACK(on_bulk_favorite_clicked), NULL);
+    gtk_box_append(GTK_BOX(g_album_app.selection_bar), btn_bulk_fav);
+
+    GtkWidget *btn_bulk_del = tizen_button_new("user-trash-symbolic", "Xoá");
+    gtk_widget_add_css_class(btn_bulk_del, "destructive-action");
+    g_signal_connect(btn_bulk_del, "clicked", G_CALLBACK(on_bulk_delete_clicked), NULL);
+    gtk_box_append(GTK_BOX(g_album_app.selection_bar), btn_bulk_del);
+
+    GtkWidget *btn_sel_clear = tizen_button_new("edit-clear-symbolic", "Bỏ chọn");
+    g_signal_connect(btn_sel_clear, "clicked", G_CALLBACK(on_selection_clear_clicked), NULL);
+    gtk_box_append(GTK_BOX(g_album_app.selection_bar), btn_sel_clear);
+
+    gtk_widget_set_visible(g_album_app.selection_bar, FALSE);
+    gtk_box_append(GTK_BOX(grid_page), g_album_app.selection_bar);
+
     GtkWidget *scroll_grid = gtk_scrolled_window_new();
     /* Lề mép — xem lớp .gutter trong tizen/theme.h. */
     gtk_widget_add_css_class(scroll_grid, "gutter");
+    gtk_widget_set_vexpand(scroll_grid, TRUE);
     g_album_app.flowbox = gtk_flow_box_new();
     gtk_widget_set_valign(GTK_WIDGET(g_album_app.flowbox), GTK_ALIGN_START);
     gtk_flow_box_set_max_children_per_line(GTK_FLOW_BOX(g_album_app.flowbox), 10);
-    gtk_flow_box_set_selection_mode(GTK_FLOW_BOX(g_album_app.flowbox), GTK_SELECTION_NONE);
+    /* MULTIPLE thay cho NONE: nhấp một lần để chọn, nhấp đúp để mở.
+     * Xem on_child_activated() về việc vì sao bỏ GtkGestureClick trên từng thẻ. */
+    gtk_flow_box_set_selection_mode(GTK_FLOW_BOX(g_album_app.flowbox), GTK_SELECTION_MULTIPLE);
+    gtk_flow_box_set_activate_on_single_click(GTK_FLOW_BOX(g_album_app.flowbox), FALSE);
+    g_signal_connect(g_album_app.flowbox, "child-activated",
+                     G_CALLBACK(on_child_activated), NULL);
+    g_signal_connect(g_album_app.flowbox, "selected-children-changed",
+                     G_CALLBACK(on_flowbox_selection_changed), NULL);
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll_grid), g_album_app.flowbox);
-    gtk_stack_add_named(GTK_STACK(g_album_app.stack), scroll_grid, "grid");
+    gtk_box_append(GTK_BOX(grid_page), scroll_grid);
+
+    gtk_stack_add_named(GTK_STACK(g_album_app.stack), grid_page, "grid");
 
     // Stack Page 1: Media Viewer View (Overlay floating controls matching Screenshot 3)
     GtkWidget *viewer_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
@@ -396,6 +468,12 @@ static void build_main_window(GtkApplication *app) {
     g_signal_connect(btn_overlay_zoom_out, "clicked", G_CALLBACK(on_zoom_out_clicked), NULL);
     gtk_box_append(GTK_BOX(overlay_center_box), btn_overlay_zoom_out);
 
+    /* Nhãn % thu phóng: trước đây bấm +/- không có phản hồi số nào, người dùng
+     * không biết đang ở mức nào hay đã chạm trần 500% / sàn 20% chưa. */
+    g_album_app.lbl_zoom = gtk_label_new("100%");
+    gtk_widget_set_size_request(g_album_app.lbl_zoom, 52, -1);
+    gtk_box_append(GTK_BOX(overlay_center_box), g_album_app.lbl_zoom);
+
     GtkWidget *btn_overlay_zoom_in = tizen_button_new("zoom-in-symbolic", NULL);
     gtk_widget_add_css_class(btn_overlay_zoom_in, "pill-btn");
     g_signal_connect(btn_overlay_zoom_in, "clicked", G_CALLBACK(on_zoom_in_clicked), NULL);
@@ -405,6 +483,33 @@ static void build_main_window(GtkApplication *app) {
     gtk_widget_add_css_class(btn_overlay_zoom_fit, "pill-btn");
     g_signal_connect(btn_overlay_zoom_fit, "clicked", G_CALLBACK(on_zoom_fit_clicked), NULL);
     gtk_box_append(GTK_BOX(overlay_center_box), btn_overlay_zoom_fit);
+
+    gtk_box_append(GTK_BOX(overlay_center_box),
+                   gtk_separator_new(GTK_ORIENTATION_VERTICAL));
+
+    /* Xoay ảnh trong trình xem.
+     * album_rotate() đã được cài đặt đầy đủ trong album-viewer.c nhưng KHÔNG
+     * nút nào gọi tới — tính năng viết xong rồi nằm chết, người dùng không có
+     * cách nào chạm tới ngoài việc vào hẳn trình sửa ảnh. */
+    GtkWidget *btn_rot_l = tizen_button_new("object-rotate-left-symbolic", NULL);
+    gtk_widget_add_css_class(btn_rot_l, "pill-btn");
+    gtk_widget_set_tooltip_text(btn_rot_l, "Xoay trái 90°");
+    g_signal_connect(btn_rot_l, "clicked", G_CALLBACK(on_view_rotate_left), NULL);
+    gtk_box_append(GTK_BOX(overlay_center_box), btn_rot_l);
+
+    GtkWidget *btn_rot_r = tizen_button_new("object-rotate-right-symbolic", NULL);
+    gtk_widget_add_css_class(btn_rot_r, "pill-btn");
+    gtk_widget_set_tooltip_text(btn_rot_r, "Xoay phải 90°");
+    g_signal_connect(btn_rot_r, "clicked", G_CALLBACK(on_view_rotate_right), NULL);
+    gtk_box_append(GTK_BOX(overlay_center_box), btn_rot_r);
+
+    /* Xoá: trước đây chỉ có phím Delete, không có nút nào — người dùng chuột
+     * thuần không biết chức năng này tồn tại. */
+    GtkWidget *btn_del = tizen_button_new("user-trash-symbolic", NULL);
+    gtk_widget_add_css_class(btn_del, "pill-btn");
+    gtk_widget_set_tooltip_text(btn_del, "Chuyển vào Thùng rác (Delete)");
+    g_signal_connect(btn_del, "clicked", G_CALLBACK(on_view_delete_clicked), NULL);
+    gtk_box_append(GTK_BOX(overlay_center_box), btn_del);
 
     gtk_overlay_add_overlay(GTK_OVERLAY(media_overlay), overlay_center_box);
 

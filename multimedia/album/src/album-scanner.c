@@ -71,6 +71,93 @@ static gboolean classify_media(const char *filename, MediaType *out_type)
     return TRUE;
 }
 
+/* =============================================================================
+ * YÊU THÍCH — lưu bền trên đĩa
+ * =============================================================================
+ * Trước đây is_favorite chỉ sống trong RAM: album_add_file() đặt FALSE cho mọi
+ * tệp ở MỖI lượt quét, và không có chỗ nào ghi lại. Người dùng đánh dấu sao
+ * xong đổi thư mục là mất, tắt app cũng mất — mục lọc "⭐ Yêu thích" ở sidebar
+ * vì thế không bao giờ có gì trong đó.
+ *
+ * Lưu vào $XDG_CONFIG_HOME/tizen-album/favorites.list, mỗi dòng một đường dẫn
+ * tuyệt đối. Định dạng dòng-đơn giản cố ý: người dùng sửa tay được, và không
+ * kéo theo phụ thuộc nào chỉ để ghi một danh sách chuỗi.
+ * ========================================================================== */
+static GHashTable *favorites = NULL;   /* tập đường dẫn, sở hữu khoá */
+
+static char *favorites_file_path(void)
+{
+    return g_build_filename(g_get_user_config_dir(), "tizen-album",
+                            "favorites.list", NULL);
+}
+
+void album_favorites_load(void)
+{
+    if (favorites)
+        g_hash_table_remove_all(favorites);
+    else
+        favorites = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+
+    char *path = favorites_file_path();
+    char *content = NULL;
+    if (g_file_get_contents(path, &content, NULL, NULL)) {
+        char **lines = g_strsplit(content, "\n", -1);
+        for (int i = 0; lines[i]; i++) {
+            char *line = g_strstrip(lines[i]);
+            if (*line)
+                g_hash_table_add(favorites, g_strdup(line));
+        }
+        g_strfreev(lines);
+        g_free(content);
+    }
+    g_free(path);
+}
+
+static void album_favorites_save(void)
+{
+    if (!favorites) return;
+
+    char *path = favorites_file_path();
+    char *dir = g_path_get_dirname(path);
+    g_mkdir_with_parents(dir, 0700);
+    g_free(dir);
+
+    GString *buf = g_string_new(NULL);
+    GHashTableIter it;
+    gpointer key;
+    g_hash_table_iter_init(&it, favorites);
+    while (g_hash_table_iter_next(&it, &key, NULL))
+        g_string_append_printf(buf, "%s\n", (const char *)key);
+
+    /* g_file_set_contents ghi ra tệp tạm rồi rename — mất điện giữa chừng không
+     * để lại danh sách yêu thích cụt. */
+    g_file_set_contents(path, buf->str, (gssize)buf->len, NULL);
+
+    g_string_free(buf, TRUE);
+    g_free(path);
+}
+
+gboolean album_is_favorite_path(const char *filepath)
+{
+    if (!favorites || !filepath) return FALSE;
+    return g_hash_table_contains(favorites, filepath);
+}
+
+void album_set_favorite(MediaItem *item, gboolean favorite)
+{
+    if (!item) return;
+    if (!favorites)
+        album_favorites_load();
+
+    item->is_favorite = favorite;
+    if (favorite)
+        g_hash_table_add(favorites, g_strdup(item->filepath));
+    else
+        g_hash_table_remove(favorites, item->filepath);
+
+    album_favorites_save();
+}
+
 void free_media_item(gpointer data) {
     MediaItem *item = (MediaItem *)data;
     if (!item) return;
@@ -169,7 +256,8 @@ void album_add_file(const char *filepath) {
     item->filepath = g_strdup(filepath);
     item->filename = g_path_get_basename(filepath);
     item->type = type;
-    item->is_favorite = FALSE;
+    /* Khôi phục trạng thái yêu thích đã lưu — xem album_favorites_load(). */
+    item->is_favorite = album_is_favorite_path(item->filepath);
     item->filesize = g_file_info_get_size(info);
     /* g_file_info_get_modification_date_time() trả về THAM CHIẾU MỚI
      * (transfer full). Bản cũ ref thêm một lần nữa -> refcount = 2, trong
@@ -248,6 +336,7 @@ static void scan_one_directory(const char *dirpath)
         item->filepath = full_path;            /* chuyển quyền sở hữu */
         item->filename = g_strdup(name);
         item->type = type;
+        item->is_favorite = album_is_favorite_path(item->filepath);
         item->filesize = g_file_info_get_size(info);
         item->mtime = g_file_info_get_modification_date_time(info);
 

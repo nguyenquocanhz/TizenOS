@@ -6,6 +6,10 @@
 #include <string.h>
 #include <unistd.h>
 
+/* Định nghĩa ở gần album_zoom(), nhưng album_show_viewer_at() nằm phía trên
+ * cũng cần gọi để đưa nhãn về 100% khi đổi ảnh. */
+static void update_zoom_label(void);
+
 /* GTK4 bỏ gtk_dialog_run(): hộp thoại phải tự huỷ trong handler "response".
  * Dùng hàm riêng thay vì ép kiểu gtk_window_destroy — chữ ký khác nhau
  * (GtkWindow* vs GtkDialog*,int,gpointer) và -Wcast-function-type sẽ kêu. */
@@ -390,12 +394,6 @@ static GdkPaintable *placeholder_paintable(MediaType type)
     return icon ? GDK_PAINTABLE(icon) : NULL;
 }
 
-static void on_card_clicked(GtkGestureClick *gesture, int n_press, double x, double y, gpointer user_data) {
-    (void)gesture; (void)n_press; (void)x; (void)y;
-    int index = GPOINTER_TO_INT(user_data);
-    album_show_viewer_at(index);
-}
-
 /* Dựng một thẻ trong lưới. Tách riêng để vòng lặp theo lô ở dưới gọn gàng. */
 static GtkWidget *create_media_card(MediaItem *item, int index)
 {
@@ -449,11 +447,11 @@ static GtkWidget *create_media_card(MediaItem *item, int index)
 
     gtk_box_append(GTK_BOX(card), lbl_box);
 
-    // Click Gesture
-    GtkGesture *click = gtk_gesture_click_new();
-    g_signal_connect(click, "pressed", G_CALLBACK(on_card_clicked), GINT_TO_POINTER(index));
-    gtk_widget_add_controller(card, GTK_EVENT_CONTROLLER(click));
-
+    /* KHÔNG gắn GtkGestureClick ở đây.
+     * Gesture riêng của thẻ nuốt sự kiện nhấn trước khi flowbox kịp xử lý, nên
+     * không thể chọn nhiều ảnh. Việc mở ảnh giờ do tín hiệu "child-activated"
+     * của flowbox đảm nhiệm (nhấp đúp / Enter) — xem on_child_activated(). */
+    (void)index;
     return card;
 }
 
@@ -638,6 +636,7 @@ void album_show_viewer_at(int index) {
     // Reset zoom and rotation
     g_album_app.current_zoom = 1.0;
     g_album_app.current_rotation = 0;
+    update_zoom_label();   /* đổi ảnh thì nhãn phải về 100%, không giữ số cũ */
 
     // Update Title
     gtk_label_set_text(GTK_LABEL(g_album_app.lbl_viewer_title), item->filename);
@@ -762,10 +761,20 @@ void album_prev_media(void) {
     album_show_viewer_at(prev_idx);
 }
 
+/* Cập nhật nhãn % thu phóng. Không có nhãn (chưa dựng xong UI) thì bỏ qua. */
+static void update_zoom_label(void)
+{
+    if (!g_album_app.lbl_zoom) return;
+    char txt[16];
+    g_snprintf(txt, sizeof(txt), "%d%%", (int)(g_album_app.current_zoom * 100.0 + 0.5));
+    gtk_label_set_text(GTK_LABEL(g_album_app.lbl_zoom), txt);
+}
+
 void album_zoom(double factor) {
     g_album_app.current_zoom *= factor;
     if (g_album_app.current_zoom < 0.2) g_album_app.current_zoom = 0.2;
     if (g_album_app.current_zoom > 5.0) g_album_app.current_zoom = 5.0;
+    update_zoom_label();
 
     MediaItem *item = (MediaItem *)g_list_nth_data(g_album_app.filtered_list, (guint)g_album_app.current_index);
     if (item && item->type == MEDIA_TYPE_PHOTO) {
@@ -783,6 +792,7 @@ void album_zoom(double factor) {
 
 void album_zoom_fit(void) {
     g_album_app.current_zoom = 1.0;
+    update_zoom_label();
     MediaItem *item = (MediaItem *)g_list_nth_data(g_album_app.filtered_list, (guint)g_album_app.current_index);
     if (item && item->type == MEDIA_TYPE_PHOTO) {
         gtk_picture_set_filename(GTK_PICTURE(g_album_app.picture_view), item->filepath);
@@ -846,10 +856,151 @@ void album_toggle_slideshow(void) {
     }
 }
 
+/* =============================================================================
+ * CHỌN HÀNG LOẠT
+ * =============================================================================
+ * Lưới dùng GTK_SELECTION_MULTIPLE: một cú nhấp chọn, nhấp đúp mở (giống mọi
+ * trình quản lý tệp). Chỉ số của thẻ trong flowbox trùng với vị trí trong
+ * filtered_list vì lưới được dựng theo đúng thứ tự đó.
+ * ========================================================================== */
+
+/* Trả về danh sách MediaItem* đang được chọn. Người gọi g_list_free (KHÔNG
+ * free phần tử — chúng thuộc media_list). */
+static GList *selected_items(void)
+{
+    if (!g_album_app.flowbox) return NULL;
+
+    GList *sel = gtk_flow_box_get_selected_children(GTK_FLOW_BOX(g_album_app.flowbox));
+    GList *items = NULL;
+
+    for (GList *l = sel; l; l = l->next) {
+        int idx = gtk_flow_box_child_get_index(GTK_FLOW_BOX_CHILD(l->data));
+        MediaItem *item = (MediaItem *)g_list_nth_data(g_album_app.filtered_list, (guint)idx);
+        if (item)
+            items = g_list_prepend(items, item);
+    }
+    g_list_free(sel);
+    return g_list_reverse(items);
+}
+
+void album_selection_clear(void)
+{
+    if (g_album_app.flowbox)
+        gtk_flow_box_unselect_all(GTK_FLOW_BOX(g_album_app.flowbox));
+}
+
+void album_selection_changed(void)
+{
+    if (!g_album_app.selection_bar) return;
+
+    GList *sel = gtk_flow_box_get_selected_children(GTK_FLOW_BOX(g_album_app.flowbox));
+    guint n = g_list_length(sel);
+    g_list_free(sel);
+
+    gtk_widget_set_visible(g_album_app.selection_bar, n > 0);
+
+    if (n > 0 && g_album_app.lbl_selection_count) {
+        char *txt = g_strdup_printf("Đã chọn %u mục", n);
+        gtk_label_set_text(GTK_LABEL(g_album_app.lbl_selection_count), txt);
+        g_free(txt);
+    }
+}
+
+void album_bulk_favorite(void)
+{
+    GList *items = selected_items();
+    if (!items) return;
+
+    /* Nếu CÒN mục nào chưa yêu thích -> đánh dấu tất cả. Nếu tất cả đã yêu
+     * thích -> bỏ dấu tất cả. Cách này dễ đoán hơn là đảo trạng thái từng mục,
+     * vốn cho ra kết quả lộn xộn khi lựa chọn đang pha trộn. */
+    gboolean any_unfavorited = FALSE;
+    for (GList *l = items; l; l = l->next)
+        if (!((MediaItem *)l->data)->is_favorite) { any_unfavorited = TRUE; break; }
+
+    for (GList *l = items; l; l = l->next)
+        album_set_favorite((MediaItem *)l->data, any_unfavorited);
+
+    g_list_free(items);
+
+    album_apply_filter(g_album_app.current_filter);
+    album_selection_changed();
+}
+
+/* Hộp thoại xác nhận xoá hàng loạt. */
+typedef struct { GList *items; } BulkDeleteCtx;
+
+static void on_bulk_delete_response(GtkDialog *dlg, int response, gpointer data)
+{
+    BulkDeleteCtx *ctx = (BulkDeleteCtx *)data;
+
+    if (response == GTK_RESPONSE_YES) {
+        guint failed = 0;
+        for (GList *l = ctx->items; l; l = l->next) {
+            MediaItem *item = (MediaItem *)l->data;
+
+            /* g_file_trash(), KHÔNG phải g_unlink().
+             * Xoá vĩnh viễn ảnh của người dùng mà không có đường lùi là hành vi
+             * không chấp nhận được với thao tác một cú nhấp. Thùng rác cho họ
+             * cơ hội khôi phục bằng công cụ quen thuộc của desktop. */
+            GFile *f = g_file_new_for_path(item->filepath);
+            GError *err = NULL;
+            if (g_file_trash(f, NULL, &err)) {
+                album_set_favorite(item, FALSE);   /* dọn khỏi danh sách yêu thích */
+                album_remove_item(item);
+            } else {
+                failed++;
+                g_warning("Không chuyển vào Thùng rác được '%s': %s",
+                          item->filepath, err ? err->message : "lỗi không rõ");
+                g_clear_error(&err);
+            }
+            g_object_unref(f);
+        }
+
+        if (failed > 0) {
+            /* Một số hệ tệp (FAT32, ổ mạng) không có Thùng rác. Báo rõ thay vì
+             * im lặng — người dùng cần biết ảnh vẫn còn đó. */
+            GtkWidget *warn = gtk_message_dialog_new(
+                GTK_WINDOW(g_album_app.window), GTK_DIALOG_MODAL,
+                GTK_MESSAGE_WARNING, GTK_BUTTONS_OK,
+                "Không chuyển được %u mục vào Thùng rác.\n"
+                "Hệ tệp chứa chúng có thể không hỗ trợ Thùng rác.", failed);
+            g_signal_connect_swapped(warn, "response", G_CALLBACK(gtk_window_destroy), warn);
+            gtk_window_present(GTK_WINDOW(warn));
+        }
+
+        album_apply_filter(g_album_app.current_filter);
+        album_selection_changed();
+    }
+
+    g_list_free(ctx->items);
+    g_free(ctx);
+    gtk_window_destroy(GTK_WINDOW(dlg));
+}
+
+void album_bulk_delete(void)
+{
+    GList *items = selected_items();
+    if (!items) return;
+
+    guint n = g_list_length(items);
+    GtkWidget *dlg = gtk_message_dialog_new(
+        GTK_WINDOW(g_album_app.window), GTK_DIALOG_MODAL,
+        GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO,
+        "Chuyển %u mục đã chọn vào Thùng rác?", n);
+
+    BulkDeleteCtx *ctx = g_new0(BulkDeleteCtx, 1);
+    ctx->items = items;
+    g_signal_connect(dlg, "response", G_CALLBACK(on_bulk_delete_response), ctx);
+    gtk_window_present(GTK_WINDOW(dlg));
+}
+
 void album_toggle_favorite(void) {
     MediaItem *item = (MediaItem *)g_list_nth_data(g_album_app.filtered_list, (guint)g_album_app.current_index);
     if (item) {
-        item->is_favorite = !item->is_favorite;
+        /* album_set_favorite ghi luôn xuống đĩa; gán thẳng item->is_favorite
+         * như bản cũ thì trạng thái mất ngay lần quét lại kế tiếp. */
+        album_set_favorite(item, !item->is_favorite);
         if (g_album_app.btn_favorite) {
             tizen_button_set_icon_label(g_album_app.btn_favorite,
             item->is_favorite ? "starred-symbolic" : "non-starred-symbolic",
@@ -866,6 +1017,36 @@ void album_delete_current(void) {
     if (!item) return;
 
     int idx = g_album_app.current_index;
+
+    /* -------------------------------------------------------------------------
+     * Xoá phải ĐỘNG tới tệp thật, không chỉ gỡ khỏi danh sách trong bộ nhớ.
+     * -------------------------------------------------------------------------
+     * Bản cũ chỉ gọi album_remove_item(): ảnh biến mất khỏi lưới nhưng vẫn nằm
+     * nguyên trên đĩa và quay lại ngay lần quét sau. Người dùng bấm Delete,
+     * thấy nó biến mất, rồi mở lại app và thấy nó còn đó.
+     *
+     * Dùng Thùng rác chứ không xoá vĩnh viễn: một phím Delete lỡ tay không được
+     * phép huỷ ảnh không thể lấy lại.
+     * ---------------------------------------------------------------------- */
+    GFile *f = g_file_new_for_path(item->filepath);
+    GError *err = NULL;
+    gboolean trashed = g_file_trash(f, NULL, &err);
+    g_object_unref(f);
+
+    if (!trashed) {
+        g_warning("Không chuyển vào Thùng rác được '%s': %s",
+                  item->filepath, err ? err->message : "lỗi không rõ");
+        g_clear_error(&err);
+        GtkWidget *warn = gtk_message_dialog_new(
+            GTK_WINDOW(g_album_app.window), GTK_DIALOG_MODAL,
+            GTK_MESSAGE_WARNING, GTK_BUTTONS_OK,
+            "Không chuyển được '%s' vào Thùng rác.", item->filename);
+        g_signal_connect_swapped(warn, "response", G_CALLBACK(gtk_window_destroy), warn);
+        gtk_window_present(GTK_WINDOW(warn));
+        return;   /* tệp còn nguyên -> giữ nó trong lưới cho khớp thực tế */
+    }
+
+    album_set_favorite(item, FALSE);   /* dọn khỏi danh sách yêu thích đã lưu */
 
     /* Bản cũ chỉ g_list_remove khỏi hai danh sách rồi bỏ mặc MediaItem —
      * filepath, filename và GDateTime rò rỉ mỗi lần xoá. album_remove_item()

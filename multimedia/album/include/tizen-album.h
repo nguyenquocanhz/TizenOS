@@ -60,6 +60,11 @@ typedef struct {
     GtkWidget *btn_slideshow;
     GtkWidget *overlay_controls_left;
     GtkWidget *overlay_controls_center;
+    GtkWidget *lbl_zoom;            // Hiển thị % thu phóng hiện tại
+
+    // Thanh công cụ chọn hàng loạt (chỉ hiện khi có ảnh được chọn)
+    GtkWidget *selection_bar;
+    GtkWidget *lbl_selection_count;
 
     // Edit / Crop Widgets
     GtkWidget *edit_picture_view;
@@ -121,6 +126,19 @@ void album_toggle_info(void);
 void album_toggle_fullscreen(void);
 void album_delete_current(void);
 void album_apply_filter(FilterType filter);
+
+/* --- Yêu thích: lưu bền qua các phiên -----------------------------------
+ * is_favorite trước đây chỉ nằm trong RAM và bị đặt lại FALSE ở mỗi lượt quét,
+ * nên mục lọc "Yêu thích" ở sidebar vô dụng ngay khi tắt app. */
+void album_favorites_load(void);
+gboolean album_is_favorite_path(const char *filepath);
+void album_set_favorite(MediaItem *item, gboolean favorite);
+
+/* --- Chọn hàng loạt trong lưới ------------------------------------------ */
+void album_selection_changed(void);   // cập nhật thanh công cụ theo số ảnh đang chọn
+void album_bulk_favorite(void);       // bật/tắt yêu thích cho mọi ảnh đang chọn
+void album_bulk_delete(void);         // chuyển mọi ảnh đang chọn vào Thùng rác
+void album_selection_clear(void);
 
 // Editor Functions
 void album_editor_rotate(int degrees);
