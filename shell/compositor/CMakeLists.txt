@@ -14,3 +14,7 @@ add_executable(tizen-compositor
     src/xwayland.c
 )
 target_link_libraries(tizen-compositor ${WLROOTS_LIBRARIES})
+
+# Thiếu install() ở bản cũ: tizen-compositor biên dịch xong rồi nằm lại trong
+# thư mục build, không bao giờ vào rootfs. Cùng lỗi với shell/settings.
+install(TARGETS tizen-compositor DESTINATION bin)
