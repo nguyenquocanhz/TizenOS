@@ -1,0 +1,48 @@
+.TH TIZEN\-ALBUM 1 "2026-08-12" "TizenOS 1.0" "TizenOS User Commands"
+.SH NAME
+tizen\-album \- trình xem ảnh và video của TizenOS
+.SH SYNOPSIS
+.B tizen\-album
+.RI [ FILE .\|.\|.]
+.SH DESCRIPTION
+.B tizen\-album
+là trình xem thư viện ảnh và video viết bằng GTK4 cho TizenOS.
+Không có đối số, chương trình nạp thư viện mặc định gồm thư mục Ảnh, thư mục
+Video của người dùng và
+.IR /usr/share/backgrounds .
+.PP
+Khi được truyền đường dẫn tệp, chương trình mở tệp đầu tiên trong chế độ xem và
+quét kèm thư mục cha để các nút Trước/Sau duyệt được cả album.
+.SH OPTIONS
+.TP
+.I FILE
+Một hoặc nhiều tệp ảnh hoặc video cần mở. Chấp nhận cả đường dẫn thường lẫn URI
+.IR file:// .
+.SH KEYBOARD SHORTCUTS
+.TP
+.B Left \fR/\fB Right
+Ảnh trước / ảnh kế tiếp.
+.TP
+.B Space
+Bật hoặc tắt slideshow.
+.TP
+.B Delete
+Xoá tệp đang xem.
+.TP
+.B Escape
+Quay lại lưới ảnh.
+.SH FILES
+.TP
+.I ~/Pictures
+Thư mục ảnh mặc định.
+.TP
+.I ~/Videos
+Thư mục video mặc định.
+.TP
+.I /usr/share/backgrounds
+Ảnh nền hệ thống.
+.SH SEE ALSO
+.BR tizen\-store (1),
+.BR tizen\-app\-manager (1)
+.SH AUTHOR
+TizenOS Engineering Team <dev@tizenos.org>

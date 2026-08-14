@@ -1,0 +1,14 @@
+Source: tizen-app-manager
+Section: admin
+Priority: optional
+Maintainer: TizenOS <admin@tizenos.org>
+Build-Depends: debhelper (>= 11), cmake, pkg-config,
+               libglib2.0-dev, libgtk-4-dev, libtizen-core-dev
+Standards-Version: 4.6.0
+
+Package: tizen-app-manager
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libgtk-4-1, libtizen-core1, policykit-1, dpkg
+Description: Trinh quan ly ung dung TizenOS (Tizen App Manager)
+ Quan ly ung dung da cai (.deb va .tpk), xem nhan bao mat Smack MAC, go
+ ung dung, xoa bo nho dem, va quan ly cac tep .deb nam trong may.

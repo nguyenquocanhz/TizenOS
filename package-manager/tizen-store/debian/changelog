@@ -1,0 +1,7 @@
+tizen-store (1.0.0-1) unstable; urgency=medium
+
+  * Bản phát hành đầu tiên được đóng gói .deb.
+  * Sửa lỗi phát hiện gói đã cài (so sánh bằng thay cho strstr).
+  * Khởi chạy ứng dụng qua GAppInfo thay cho chuỗi shell.
+
+ -- TizenOS <admin@tizenos.org>  Mon, 10 Aug 2026 22:53:56 +0700

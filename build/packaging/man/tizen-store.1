@@ -1,0 +1,26 @@
+.TH TIZEN\-STORE 1 "2026-08-12" "TizenOS 1.0" "TizenOS User Commands"
+.SH NAME
+tizen\-store \- kho ứng dụng của TizenOS
+.SH SYNOPSIS
+.B tizen\-store
+.SH DESCRIPTION
+.B tizen\-store
+là trung tâm phần mềm GTK4 của TizenOS. Chương trình hiển thị danh mục ứng dụng
+Linux, Debian 12 và Tizen Native đã tuyển chọn, cho phép cài đặt bằng một cú
+nhấp thông qua
+.BR apt (8)
+với quyền nâng cao xin qua
+.BR pkexec (1).
+.PP
+Trạng thái đã cài của từng ứng dụng được quét một lần cho mỗi phiên và làm mới
+sau mỗi thao tác cài hoặc gỡ.
+.SH FILES
+.TP
+.I /usr/share/tizen\-store/screenshots
+Ảnh chụp màn hình hiển thị trong hộp thoại chi tiết ứng dụng.
+.SH SEE ALSO
+.BR tizen\-app\-manager (1),
+.BR apt (8),
+.BR pkexec (1)
+.SH AUTHOR
+TizenOS Engineering Team <dev@tizenos.org>

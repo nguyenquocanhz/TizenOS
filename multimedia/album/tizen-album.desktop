@@ -1,0 +1,15 @@
+[Desktop Entry]
+Name=Tizen Album
+GenericName=Media Viewer & Gallery
+Comment=Modern Glassmorphic Photo & Video Viewer for TizenOS
+Exec=tizen-album %U
+Icon=multimedia-photo-viewer
+Terminal=false
+Type=Application
+StartupNotify=true
+# Đúng MỘT main category. Bản cũ có cả Graphics lẫn AudioVideo nên ứng dụng hiện
+# hai lần trong menu (desktop-file-validate cảnh báo). Album trước hết là trình
+# xem ảnh; video vẫn mở được qua MimeType bên dưới.
+Categories=Graphics;Viewer;Photography;GTK;
+Keywords=Photo;Picture;Video;Media;Gallery;Album;Viewer;
+MimeType=image/jpeg;image/png;image/gif;image/webp;image/bmp;image/svg+xml;video/mp4;video/x-matroska;video/webm;video/quicktime;

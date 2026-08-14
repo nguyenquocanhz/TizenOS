@@ -1,0 +1,24 @@
+.TH TIZEN\-APP\-MANAGER 1 "2026-08-12" "TizenOS 1.0" "TizenOS User Commands"
+.SH NAME
+tizen\-app\-manager \- quản lý ứng dụng đã cài trên TizenOS
+.SH SYNOPSIS
+.B tizen\-app\-manager
+.SH DESCRIPTION
+.B tizen\-app\-manager
+liệt kê mọi ứng dụng đã cài trên hệ thống, gồm cả gói Debian
+.RB ( .deb )
+lẫn gói Tizen Native
+.RB ( .tpk ),
+kèm nhãn Smack MAC của từng ứng dụng.
+.PP
+Chương trình cũng quét các tệp
+.B .deb
+nằm trong hệ thống tệp và cho phép cài đặt chúng trực tiếp.
+Thao tác cần quyền quản trị được xin qua
+.BR pkexec (1).
+.SH SEE ALSO
+.BR tizen\-store (1),
+.BR dpkg (1),
+.BR pkexec (1)
+.SH AUTHOR
+TizenOS Engineering Team <dev@tizenos.org>

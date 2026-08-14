@@ -18,5 +18,10 @@ add_executable(installer-daemon
 target_link_libraries(installer-daemon ${GIO2_LIBRARIES})
 
 install(TARGETS installer-daemon DESTINATION bin)
-install(FILES config/org.tizen.installer.conf DESTINATION etc/dbus-1/system.d)
+# Duong dan TUYET DOI /etc, khong phai "etc" tuong doi.
+# Duong dan tuong doi duoc ghep sau CMAKE_INSTALL_PREFIX, nen voi prefix=/usr
+# tep roi vao /usr/etc/dbus-1/system.d - cho D-Bus khong bao gio doc toi, va
+# lintian coi la loi FHS. Cac component khac (cynara, tizen-lve) von da dung
+# /etc tuyet doi; day la cho duy nhat con lech.
+install(FILES config/org.tizen.installer.conf DESTINATION /etc/dbus-1/system.d)
 install(FILES config/app-installer.service DESTINATION lib/systemd/system)
